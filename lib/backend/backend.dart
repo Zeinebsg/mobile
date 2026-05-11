@@ -9,14 +9,14 @@ import 'schema/user_record.dart';
 import 'schema/seances_record.dart';
 import 'schema/films_record.dart';
 import 'schema/salles_record.dart';
-
+import 'schema/film_record.dart';  // ⭐ AJOUTER CETTE LIGNE
 export 'dart:async' show StreamSubscription;
 export 'package:cloud_firestore/cloud_firestore.dart' hide Order;
 export 'package:firebase_core/firebase_core.dart';
 export 'schema/index.dart';
 export 'schema/util/firestore_util.dart';
 export 'schema/util/schema_util.dart';
-
+export 'schema/film_record.dart';  // ⭐ AJOUTER CETTE LIGNE
 export 'schema/user_record.dart';
 export 'schema/seances_record.dart';
 export 'schema/films_record.dart';
@@ -157,6 +157,42 @@ Stream<List<SallesRecord>> querySallesRecord({
       singleRecord: singleRecord,
     );
 
+/// Functions to query FilmRecords (as a Stream and as a Future).
+Future<int> queryFilmRecordCount({
+  Query Function(Query)? queryBuilder,
+  int limit = -1,
+}) =>
+    queryCollectionCount(
+      FilmRecord.collection,
+      queryBuilder: queryBuilder,
+      limit: limit,
+    );
+
+Stream<List<FilmRecord>> queryFilmRecord({
+  Query Function(Query)? queryBuilder,
+  int limit = -1,
+  bool singleRecord = false,
+}) =>
+    queryCollection(
+      FilmRecord.collection,
+      FilmRecord.fromSnapshot,
+      queryBuilder: queryBuilder,
+      limit: limit,
+      singleRecord: singleRecord,
+    );
+
+Future<List<FilmRecord>> queryFilmRecordOnce({
+  Query Function(Query)? queryBuilder,
+  int limit = -1,
+  bool singleRecord = false,
+}) =>
+    queryCollectionOnce(
+      FilmRecord.collection,
+      FilmRecord.fromSnapshot,
+      queryBuilder: queryBuilder,
+      limit: limit,
+      singleRecord: singleRecord,
+    );
 Future<List<SallesRecord>> querySallesRecordOnce({
   Query Function(Query)? queryBuilder,
   int limit = -1,

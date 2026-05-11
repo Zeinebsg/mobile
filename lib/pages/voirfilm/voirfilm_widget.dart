@@ -12,6 +12,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'voirfilm_model.dart';
 import 'movie_detail_page.dart';
 import '../test/test_widget.dart';
+import '../ajouterfilm/ajouterfilm_widget.dart';
+
 
 class VoirfilmWidget extends StatefulWidget {
   const VoirfilmWidget({super.key});

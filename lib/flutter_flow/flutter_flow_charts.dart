@@ -4,8 +4,9 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-export 'package:fl_chart/fl_chart.dart'
-    show BarAreaData, FlDotData, LineChartBarData, BarChartAlignment;
+// ============================================================
+// ⭐ WIDGET LINE CHART
+// ============================================================
 
 class FlutterFlowLineChart extends StatelessWidget {
   const FlutterFlowLineChart({
@@ -44,10 +45,10 @@ class FlutterFlowLineChart extends StatelessWidget {
             show: chartStylingInfo.showGrid,
             getDrawingHorizontalLine: chartStylingInfo.gridColor != null
                 ? (value) => FlLine(color: chartStylingInfo.gridColor!)
-                : defaultGridLine,
+                : _defaultGridLine,
             getDrawingVerticalLine: chartStylingInfo.gridColor != null
                 ? (value) => FlLine(color: chartStylingInfo.gridColor!)
-                : defaultGridLine,
+                : _defaultGridLine,
           ),
           borderData: FlBorderData(
             border: Border.all(
@@ -56,7 +57,7 @@ class FlutterFlowLineChart extends StatelessWidget {
             ),
             show: chartStylingInfo.showBorder,
           ),
-          titlesData: getTitlesData(
+          titlesData: _getTitlesData(
             xAxisLabelInfo,
             yAxisLabelInfo,
             getXTitlesWidget: xLabels != null
@@ -89,14 +90,25 @@ class FlutterFlowLineChart extends StatelessWidget {
                 : null,
           ),
           lineBarsData: dataWithSpots,
-          minX: axisBounds.minX,
-          minY: axisBounds.minY,
-          maxX: axisBounds.maxX,
-          maxY: axisBounds.maxY,
+          minX: axisBounds.minX ?? 0,
+          minY: axisBounds.minY ?? 0,
+          maxX: axisBounds.maxX ?? 10,
+          maxY: axisBounds.maxY ?? 100,
           backgroundColor: chartStylingInfo.backgroundColor,
         ),
       );
+  
+  FlLine _defaultGridLine(double value) {
+    return FlLine(
+      color: Colors.grey.withOpacity(0.2),
+      strokeWidth: 1,
+    );
+  }
 }
+
+// ============================================================
+// ⭐ WIDGET BAR CHART
+// ============================================================
 
 class FlutterFlowBarChart extends StatelessWidget {
   const FlutterFlowBarChart({
@@ -172,14 +184,13 @@ class FlutterFlowBarChart extends StatelessWidget {
           barsSpace: barSpace,
           barRods: [
             BarChartRodData(
-              toY: sum(stackData),
+              toY: _sum(stackData),
               width: barWidth,
               borderRadius: barBorderRadius,
               rodStackItems: stackData.asMap().entries.map((stack) {
                 final stackInt = stack.key;
                 final stackSettings = barData[stackInt];
-                final start =
-                    stackInt == 0 ? 0.0 : sum(stackData.sublist(0, stackInt));
+                final start = stackInt == 0 ? 0.0 : _sum(stackData.sublist(0, stackInt));
                 return BarChartRodStackItem(
                   start,
                   start + stack.value,
@@ -195,7 +206,7 @@ class FlutterFlowBarChart extends StatelessWidget {
         );
       }).toList();
 
-  double sum(List<double> list) => list.reduce((a, b) => a + b);
+  double _sum(List<double> list) => list.reduce((a, b) => a + b);
 
   @override
   Widget build(BuildContext context) {
@@ -213,10 +224,10 @@ class FlutterFlowBarChart extends StatelessWidget {
           show: chartStylingInfo.showGrid,
           getDrawingHorizontalLine: chartStylingInfo.gridColor != null
               ? (value) => FlLine(color: chartStylingInfo.gridColor!)
-              : defaultGridLine,
+              : _defaultGridLine,
           getDrawingVerticalLine: chartStylingInfo.gridColor != null
               ? (value) => FlLine(color: chartStylingInfo.gridColor!)
-              : defaultGridLine,
+              : _defaultGridLine,
         ),
         borderData: FlBorderData(
           border: Border.all(
@@ -225,7 +236,7 @@ class FlutterFlowBarChart extends StatelessWidget {
           ),
           show: chartStylingInfo.showBorder,
         ),
-        titlesData: getTitlesData(
+        titlesData: _getTitlesData(
           xAxisLabelInfo,
           yAxisLabelInfo,
           getXTitlesWidget: (val, _) {
@@ -241,13 +252,24 @@ class FlutterFlowBarChart extends StatelessWidget {
         ),
         barGroups: stacked ? stacks : groups,
         groupsSpace: groupSpace,
-        minY: axisBounds.minY,
-        maxY: axisBounds.maxY,
+        minY: axisBounds.minY ?? 0,
+        maxY: axisBounds.maxY ?? 100,
         backgroundColor: chartStylingInfo.backgroundColor,
       ),
     );
   }
+  
+  FlLine _defaultGridLine(double value) {
+    return FlLine(
+      color: Colors.grey.withOpacity(0.2),
+      strokeWidth: 1,
+    );
+  }
 }
+
+// ============================================================
+// ⭐ ENUM ET CLASSES DE DONNÉES
+// ============================================================
 
 enum PieChartSectionLabelType {
   none,
@@ -298,12 +320,12 @@ class FlutterFlowPieChart extends StatelessWidget {
               final otherPropsLength = data.radius.length;
               switch (sectionLabelType) {
                 case PieChartSectionLabelType.value:
-                  title = formatLabel(labelFormatter, sectionData);
+                  title = _formatLabel(labelFormatter, sectionData);
                   break;
                 case PieChartSectionLabelType.percent:
                   title = sumOfValues == 0
                       ? '0%'
-                      : '${formatLabel(labelFormatter, sectionData / sumOfValues * 100)}%';
+                      : '${_formatLabel(labelFormatter, sectionData / sumOfValues * 100)}%';
                   break;
                 default:
                   break;
@@ -387,26 +409,31 @@ class FlutterFlowChartLegendWidget extends StatelessWidget {
           ),
         ),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: entries
               .map(
-                (entry) => Row(
-                  children: [
-                    Container(
-                      height: indicatorSize,
-                      width: indicatorSize,
-                      decoration: BoxDecoration(
-                        color: entry.color,
-                        borderRadius: indicatorBorderRadius,
+                (entry) => Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  child: Row(
+                    children: [
+                      Container(
+                        height: indicatorSize,
+                        width: indicatorSize,
+                        decoration: BoxDecoration(
+                          color: entry.color,
+                          borderRadius: indicatorBorderRadius,
+                        ),
                       ),
-                    ),
-                    Padding(
-                      padding: textPadding,
-                      child: Text(
-                        entry.name,
-                        style: textStyle,
-                      ),
-                    )
-                  ],
+                      Padding(
+                        padding: textPadding,
+                        child: Text(
+                          entry.name,
+                          style: textStyle,
+                        ),
+                      )
+                    ],
+                  ),
                 ),
               )
               .toList(),
@@ -469,11 +496,17 @@ class LabelFormatter {
   });
 
   final String Function(double)? numberFormat;
+  
   NumberFormat get defaultFormat => NumberFormat()..significantDigits = 2;
 }
 
 class AxisBounds {
-  const AxisBounds({this.minX, this.minY, this.maxX, this.maxY});
+  const AxisBounds({
+    this.minX, 
+    this.minY, 
+    this.maxX, 
+    this.maxY
+  });
 
   final double? minX;
   final double? minY;
@@ -539,6 +572,10 @@ class FFPieChartData {
   List<double> get data => _dataToDouble(values).map((e) => e ?? 0.0).toList();
 }
 
+// ============================================================
+// ⭐ FONCTIONS UTILITAIRES
+// ============================================================
+
 List<double?> _dataToDouble(List<dynamic> data) {
   if (data.isEmpty) {
     return [];
@@ -555,7 +592,6 @@ List<double?> _dataToDouble(List<dynamic> data) {
         .toList();
   }
   if (data.first is String) {
-    // First try to parse as doubles
     if (double.tryParse(data.first as String) != null) {
       return data.map((d) => double.tryParse(d as String)).toList();
     }
@@ -572,7 +608,7 @@ List<double?> _dataToDouble(List<dynamic> data) {
   return [];
 }
 
-FlTitlesData getTitlesData(
+FlTitlesData _getTitlesData(
   AxisLabelInfo xAxisLabelInfo,
   AxisLabelInfo yAxisLabelInfo, {
   Widget Function(double, TitleMeta)? getXTitlesWidget,
@@ -593,7 +629,7 @@ FlTitlesData getTitlesData(
           getTitlesWidget: (val, _) => getXTitlesWidget != null
               ? getXTitlesWidget(val, _)
               : Text(
-                  formatLabel(xAxisLabelInfo.labelFormatter, val),
+                  _formatLabel(xAxisLabelInfo.labelFormatter, val),
                   style: xAxisLabelInfo.labelTextStyle,
                 ),
           showTitles: xAxisLabelInfo.showLabels,
@@ -617,7 +653,7 @@ FlTitlesData getTitlesData(
           getTitlesWidget: (val, meta) => getYTitlesWidget != null
               ? getYTitlesWidget(val, meta)
               : Text(
-                  formatLabel(yAxisLabelInfo.labelFormatter, val),
+                  _formatLabel(yAxisLabelInfo.labelFormatter, val),
                   style: yAxisLabelInfo.labelTextStyle,
                 ),
           showTitles: yAxisLabelInfo.showLabels,
@@ -627,7 +663,7 @@ FlTitlesData getTitlesData(
       ),
     );
 
-String formatLabel(LabelFormatter formatter, double value) {
+String _formatLabel(LabelFormatter formatter, double value) {
   if (formatter.numberFormat != null) {
     return formatter.numberFormat!(value);
   }

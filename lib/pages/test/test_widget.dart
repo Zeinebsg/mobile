@@ -11,6 +11,7 @@ import 'test_model.dart';
 export 'test_model.dart';
 import '../voirfilm/voirfilm_widget.dart';
 
+import '../ajouterfilm_copy/ajouterfilm_copy_widget.dart';
 class TestWidget extends StatefulWidget {
   const TestWidget({
     super.key,

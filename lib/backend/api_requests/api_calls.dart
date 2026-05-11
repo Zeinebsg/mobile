@@ -225,18 +225,33 @@ class SimilerMoviesCall {
 
 class SearchMoviesCall {
   static Future<ApiCallResponse> call({
-    String? query = 'Deadpool',
-    String? apiKey = '',
-  }) async {
+    String? query = '',
+  }) {
+    final apiKey = '81678c3f61130b7140ec8c6c51cab856';
+    
+    // Si query est vide, 'popular' ou 'trending', utiliser l'API popular
+    final String url;
+    final Map<String, dynamic> params = {
+      'api_key': apiKey,
+      'language': 'fr-FR',
+    };
+    
+    if (query == null || query.isEmpty || query == 'popular' || query == 'trending') {
+      // Utiliser l'API des films populaires
+      url = 'https://api.themoviedb.org/3/movie/popular';
+      params['page'] = 1;
+    } else {
+      // Utiliser l'API de recherche
+      url = 'https://api.themoviedb.org/3/search/movie';
+      params['query'] = query;
+    }
+    
     return ApiManager.instance.makeApiCall(
       callName: 'searchMovies',
-      apiUrl: 'https://api.themoviedb.org/3/search/movie',
+      apiUrl: url,
       callType: ApiCallType.GET,
       headers: {},
-      params: {
-        'query': query,
-        'api_key': apiKey,
-      },
+      params: params,
       returnBody: true,
       encodeBodyUtf8: false,
       decodeUtf8: false,
@@ -306,6 +321,50 @@ class EpisodesCall {
       headers: {},
       params: {
         'api_key': apiKey,
+      },
+      returnBody: true,
+      encodeBodyUtf8: false,
+      decodeUtf8: false,
+      cache: false,
+      isStreamingApi: false,
+      alwaysAllowBody: false,
+    );
+  }
+}// ⭐ AJOUTER CES CLASSES DANS api_calls.dart ⭐
+
+class TrendingMoviesCall {
+  static Future<ApiCallResponse> call() {
+    final apiKey = '81678c3f61130b7140ec8c6c51cab856';
+    return ApiManager.instance.makeApiCall(
+      callName: 'TrendingMoviesCall',
+      apiUrl: 'https://api.themoviedb.org/3/trending/movie/week',
+      callType: ApiCallType.GET,
+      headers: {},
+      params: {
+        'api_key': apiKey,
+        'language': 'fr-FR',
+      },
+      returnBody: true,
+      encodeBodyUtf8: false,
+      decodeUtf8: false,
+      cache: false,
+      isStreamingApi: false,
+      alwaysAllowBody: false,
+    );
+  }
+}
+
+class MovieVideosCall {
+  static Future<ApiCallResponse> call(int movieId) {
+    final apiKey = '81678c3f61130b7140ec8c6c51cab856';
+    return ApiManager.instance.makeApiCall(
+      callName: 'MovieVideosCall',
+      apiUrl: 'https://api.themoviedb.org/3/movie/$movieId/videos',
+      callType: ApiCallType.GET,
+      headers: {},
+      params: {
+        'api_key': apiKey,
+        'language': 'fr-FR',
       },
       returnBody: true,
       encodeBodyUtf8: false,

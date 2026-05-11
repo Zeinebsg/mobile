@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'homex_model.dart';
 export 'homex_model.dart';
+import '../voirfilm/voirfilm_widget.dart';
 
 /// Create a page home for a cinema reservation  application withe theme black
 /// and red where it gonna be affiche=ées les seances de film disponible  add
@@ -1128,7 +1129,7 @@ class _HomexWidgetState extends State<HomexWidget> {
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (context) => ActivityWidget(),
+                                        builder: (context) =>  const VoirfilmWidget(),
                                       ),
                                     );
                                   },

@@ -53,6 +53,34 @@ class FFAppState extends ChangeNotifier {
   set selectedFilmName(String value) {
     _selectedFilmName = value;
   }
+
+  // ⭐ AJOUT POUR research_film_widget.dart ⭐
+  dynamic _selectedMovie;
+  dynamic get selectedMovie => _selectedMovie;
+  set selectedMovie(dynamic value) {
+    _selectedMovie = value;
+  }
+
+  // ⭐ AJOUT POUR la recherche et les résultats ⭐
+  dynamic _searchResults;
+  dynamic get searchResults => _searchResults;
+  set searchResults(dynamic value) {
+    _searchResults = value;
+  }
+
+  // ⭐ AJOUT POUR l'état de chargement ⭐
+  bool _isLoading = false;
+  bool get isLoading => _isLoading;
+  set isLoading(bool value) {
+    _isLoading = value;
+  }
+
+  // ⭐ AJOUT POUR la requête de recherche ⭐
+  String _searchQuery = '';
+  String get searchQuery => _searchQuery;
+  set searchQuery(String value) {
+    _searchQuery = value;
+  }
 }
 
 void _safeInit(Function() initializeField) {
