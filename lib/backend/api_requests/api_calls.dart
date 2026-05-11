@@ -330,7 +330,9 @@ class EpisodesCall {
       alwaysAllowBody: false,
     );
   }
-}// ⭐ AJOUTER CES CLASSES DANS api_calls.dart ⭐
+}
+
+// ⭐ AJOUTER CES CLASSES DANS api_calls.dart ⭐
 
 class TrendingMoviesCall {
   static Future<ApiCallResponse> call() {

@@ -9,18 +9,24 @@ import 'schema/user_record.dart';
 import 'schema/seances_record.dart';
 import 'schema/films_record.dart';
 import 'schema/salles_record.dart';
-import 'schema/film_record.dart';  // ⭐ AJOUTER CETTE LIGNE
+import 'schema/film_record.dart';
+import 'schema/billet_record.dart';
+import 'schema/panier1_record.dart';
+
 export 'dart:async' show StreamSubscription;
 export 'package:cloud_firestore/cloud_firestore.dart' hide Order;
 export 'package:firebase_core/firebase_core.dart';
 export 'schema/index.dart';
 export 'schema/util/firestore_util.dart';
 export 'schema/util/schema_util.dart';
-export 'schema/film_record.dart';  // ⭐ AJOUTER CETTE LIGNE
+
 export 'schema/user_record.dart';
 export 'schema/seances_record.dart';
 export 'schema/films_record.dart';
 export 'schema/salles_record.dart';
+export 'schema/film_record.dart';
+export 'schema/billet_record.dart';
+export 'schema/panier1_record.dart';
 
 /// Functions to query UserRecords (as a Stream and as a Future).
 Future<int> queryUserRecordCount({
@@ -157,6 +163,19 @@ Stream<List<SallesRecord>> querySallesRecord({
       singleRecord: singleRecord,
     );
 
+Future<List<SallesRecord>> querySallesRecordOnce({
+  Query Function(Query)? queryBuilder,
+  int limit = -1,
+  bool singleRecord = false,
+}) =>
+    queryCollectionOnce(
+      SallesRecord.collection,
+      SallesRecord.fromSnapshot,
+      queryBuilder: queryBuilder,
+      limit: limit,
+      singleRecord: singleRecord,
+    );
+
 /// Functions to query FilmRecords (as a Stream and as a Future).
 Future<int> queryFilmRecordCount({
   Query Function(Query)? queryBuilder,
@@ -193,14 +212,76 @@ Future<List<FilmRecord>> queryFilmRecordOnce({
       limit: limit,
       singleRecord: singleRecord,
     );
-Future<List<SallesRecord>> querySallesRecordOnce({
+
+/// Functions to query BilletRecords (as a Stream and as a Future).
+Future<int> queryBilletRecordCount({
+  Query Function(Query)? queryBuilder,
+  int limit = -1,
+}) =>
+    queryCollectionCount(
+      BilletRecord.collection,
+      queryBuilder: queryBuilder,
+      limit: limit,
+    );
+
+Stream<List<BilletRecord>> queryBilletRecord({
+  Query Function(Query)? queryBuilder,
+  int limit = -1,
+  bool singleRecord = false,
+}) =>
+    queryCollection(
+      BilletRecord.collection,
+      BilletRecord.fromSnapshot,
+      queryBuilder: queryBuilder,
+      limit: limit,
+      singleRecord: singleRecord,
+    );
+
+Future<List<BilletRecord>> queryBilletRecordOnce({
   Query Function(Query)? queryBuilder,
   int limit = -1,
   bool singleRecord = false,
 }) =>
     queryCollectionOnce(
-      SallesRecord.collection,
-      SallesRecord.fromSnapshot,
+      BilletRecord.collection,
+      BilletRecord.fromSnapshot,
+      queryBuilder: queryBuilder,
+      limit: limit,
+      singleRecord: singleRecord,
+    );
+
+/// Functions to query Panier1Records (as a Stream and as a Future).
+Future<int> queryPanier1RecordCount({
+  Query Function(Query)? queryBuilder,
+  int limit = -1,
+}) =>
+    queryCollectionCount(
+      Panier1Record.collection,
+      queryBuilder: queryBuilder,
+      limit: limit,
+    );
+
+Stream<List<Panier1Record>> queryPanier1Record({
+  Query Function(Query)? queryBuilder,
+  int limit = -1,
+  bool singleRecord = false,
+}) =>
+    queryCollection(
+      Panier1Record.collection,
+      Panier1Record.fromSnapshot,
+      queryBuilder: queryBuilder,
+      limit: limit,
+      singleRecord: singleRecord,
+    );
+
+Future<List<Panier1Record>> queryPanier1RecordOnce({
+  Query Function(Query)? queryBuilder,
+  int limit = -1,
+  bool singleRecord = false,
+}) =>
+    queryCollectionOnce(
+      Panier1Record.collection,
+      Panier1Record.fromSnapshot,
       queryBuilder: queryBuilder,
       limit: limit,
       singleRecord: singleRecord,

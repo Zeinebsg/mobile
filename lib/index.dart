@@ -17,3 +17,14 @@ export '/pages/homex/homex_widget.dart' show HomexWidget;
 export '/pages/seanaces/seanaces_widget.dart' show SeanacesWidget;
 export '/pages/addseance/addseance_widget.dart' show AddseanceWidget;
 export '/pages/updateseance/updateseance_widget.dart' show UpdateseanceWidget;
+export '/pages/admin_billet/admin_billet_widget.dart' show AdminBilletWidget;
+export '/pages/billet/billet_widget.dart' show BilletWidget;
+export '/pages/edit_billet/edit_billet_widget.dart' show EditBilletWidget;
+export '/pages/billet_user/billet_user_widget.dart' show BilletUserWidget;
+export '/pages/panierr/panierr_widget.dart' show PanierrWidget;
+export '/pages/trailer/trailer_widget.dart' show TrailerWidget;
+export '/pages/cinema_location/cinema_location_widget.dart'
+    show CinemaLocationWidget;
+export '/pages/stripe_payment/stripe_payment_widget.dart'
+    show StripePaymentWidget;
+export '/success_payment/success_payment_widget.dart' show SuccessPaymentWidget;

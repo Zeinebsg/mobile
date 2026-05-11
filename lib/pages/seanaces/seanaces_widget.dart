@@ -21,9 +21,9 @@ import '../../widgets/news_widget.dart';
 class WeatherForDate extends StatefulWidget {
   final DateTime date;
   final String ville;
-  
+
   const WeatherForDate({
-    super.key, 
+    super.key,
     required this.date,
     this.ville = 'Tunis',
   });
@@ -43,41 +43,43 @@ class _WeatherForDateState extends State<WeatherForDate> {
 
   Future<Map<String, dynamic>> _getWeatherForDate() async {
     const apiKey = 'f30874a9d31218b439a29e45a2a7fc3c';
-    
+
     final url = Uri.parse(
-      'https://api.openweathermap.org/data/2.5/forecast?q=${widget.ville}&appid=$apiKey&units=metric&lang=fr&cnt=40'
-    );
-    
+        'https://api.openweathermap.org/data/2.5/forecast?q=${widget.ville}&appid=$apiKey&units=metric&lang=fr&cnt=40');
+
     try {
       final response = await http.get(url);
-      
+
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         final List<dynamic> forecasts = data['list'];
-        
-        final targetDate = DateTime(widget.date.year, widget.date.month, widget.date.day);
+
+        final targetDate =
+            DateTime(widget.date.year, widget.date.month, widget.date.day);
         Map<String, dynamic>? weatherForDay;
-        
+
         for (var forecast in forecasts) {
           final forecastDate = DateTime.parse(forecast['dt_txt']);
-          final forecastDay = DateTime(forecastDate.year, forecastDate.month, forecastDate.day);
-          
+          final forecastDay =
+              DateTime(forecastDate.year, forecastDate.month, forecastDate.day);
+
           if (forecastDay == targetDate) {
             weatherForDay = forecast;
             break;
           }
         }
-        
+
         if (weatherForDay != null) {
           final temp = (weatherForDay['main']['temp'] as num).toDouble();
-          final condition = weatherForDay['weather'][0]['description'] as String;
+          final condition =
+              weatherForDay['weather'][0]['description'] as String;
           final humidity = weatherForDay['main']['humidity'];
           final windSpeed = weatherForDay['wind']['speed'];
-          
+
           String messagePrecaution = '';
           int couleurValue = 0xFF2196F3;
           String icone = '🌤️';
-          
+
           if (temp <= 5) {
             messagePrecaution = '❄️ FROID : Couvrez-vous bien !';
             couleurValue = 0xFF00BCD4;
@@ -102,7 +104,8 @@ class _WeatherForDateState extends State<WeatherForDate> {
             messagePrecaution = '💧 HUMIDE : Prévoyez une veste.';
             couleurValue = 0xFF29B6F6;
             icone = '💧';
-          } else if (condition.contains('soleil') || condition.contains('dégagé')) {
+          } else if (condition.contains('soleil') ||
+              condition.contains('dégagé')) {
             messagePrecaution = '😎 Beau temps ! Bon cinéma !';
             couleurValue = 0xFFFFC107;
             icone = '😎';
@@ -111,7 +114,7 @@ class _WeatherForDateState extends State<WeatherForDate> {
             couleurValue = 0xFFE50914;
             icone = '🎬';
           }
-          
+
           return {
             'success': true,
             'temperature': temp.round(),
@@ -166,14 +169,17 @@ class _WeatherForDateState extends State<WeatherForDate> {
                   ),
                 ),
                 SizedBox(width: 8),
-                Text('Météo...', style: TextStyle(color: Colors.white70, fontSize: 12)),
+                Text('Météo...',
+                    style: TextStyle(color: Colors.white70, fontSize: 12)),
               ],
             ),
           );
         }
 
-        if (snapshot.hasError || (snapshot.hasData && snapshot.data!['success'] == false)) {
-          final errorMsg = snapshot.hasData ? snapshot.data!['message'] : 'Erreur';
+        if (snapshot.hasError ||
+            (snapshot.hasData && snapshot.data!['success'] == false)) {
+          final errorMsg =
+              snapshot.hasData ? snapshot.data!['message'] : 'Erreur';
           return Container(
             padding: const EdgeInsets.all(8),
             child: Row(
@@ -181,7 +187,9 @@ class _WeatherForDateState extends State<WeatherForDate> {
               children: [
                 const Icon(Icons.warning, color: Color(0xFFE50914), size: 16),
                 const SizedBox(width: 6),
-                Text(errorMsg, style: const TextStyle(color: Colors.white60, fontSize: 11)),
+                Text(errorMsg,
+                    style:
+                        const TextStyle(color: Colors.white60, fontSize: 11)),
               ],
             ),
           );
@@ -190,7 +198,7 @@ class _WeatherForDateState extends State<WeatherForDate> {
         if (snapshot.hasData) {
           final data = snapshot.data!;
           final couleur = Color(data['couleur'] as int);
-          
+
           return Container(
             margin: const EdgeInsets.only(top: 8),
             padding: const EdgeInsets.all(10),
@@ -213,7 +221,8 @@ class _WeatherForDateState extends State<WeatherForDate> {
                     shape: BoxShape.circle,
                   ),
                   child: Center(
-                    child: Text(data['icone'], style: const TextStyle(fontSize: 18)),
+                    child: Text(data['icone'],
+                        style: const TextStyle(fontSize: 18)),
                   ),
                 ),
                 const SizedBox(width: 10),
@@ -224,30 +233,40 @@ class _WeatherForDateState extends State<WeatherForDate> {
                     Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.thermostat, size: 12, color: Colors.white70),
+                        const Icon(Icons.thermostat,
+                            size: 12, color: Colors.white70),
                         const SizedBox(width: 4),
                         Text(
                           '${data['temperature']}°C',
-                          style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold),
+                          style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold),
                         ),
                       ],
                     ),
                     Text(
                       data['condition'],
-                      style: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontSize: 11),
+                      style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.9),
+                          fontSize: 11),
                     ),
                   ],
                 ),
                 const SizedBox(width: 8),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Text(
                     data['message'],
-                    style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w500),
+                    style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w500),
                   ),
                 ),
               ],
@@ -276,10 +295,10 @@ class SeanacesWidget extends StatefulWidget {
 class _SeanacesWidgetState extends State<SeanacesWidget> {
   late SeanacesModel _model;
   final scaffoldKey = GlobalKey<ScaffoldState>();
-  
+
   String _searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
-  
+
   DateTime? _selectedDate;
   String _dateFilter = 'tous';
   bool _isOwner = false;
@@ -288,12 +307,12 @@ class _SeanacesWidgetState extends State<SeanacesWidget> {
   void initState() {
     super.initState();
     _model = createModel(context, () => SeanacesModel());
-    
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _checkUserRole();
     });
   }
-  
+
   void _checkUserRole() {
     final user = currentUserDocument;
     if (user != null) {
@@ -313,10 +332,11 @@ class _SeanacesWidgetState extends State<SeanacesWidget> {
   bool _matchesDateFilter(DateTime? seanceDate) {
     if (seanceDate == null) return false;
     if (_dateFilter == 'tous') return true;
-    
+
     final today = DateTime.now();
-    final seanceDay = DateTime(seanceDate.year, seanceDate.month, seanceDate.day);
-    
+    final seanceDay =
+        DateTime(seanceDate.year, seanceDate.month, seanceDate.day);
+
     switch (_dateFilter) {
       case 'aujourdhui':
         final todayDay = DateTime(today.year, today.month, today.day);
@@ -381,7 +401,10 @@ class _SeanacesWidgetState extends State<SeanacesWidget> {
                 children: [
                   Text(
                     '📰 Actualités Cinéma',
-                    style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold),
                   ),
                   Icon(Icons.movie, color: Color(0xFFE50914)),
                 ],
@@ -395,10 +418,11 @@ class _SeanacesWidgetState extends State<SeanacesWidget> {
     );
   }
 
-  Future<void> _shareToWhatsApp(String filmName, String salleName, DateTime? dateTime, String format, String quality) async {
+  Future<void> _shareToWhatsApp(String filmName, String salleName,
+      DateTime? dateTime, String format, String quality) async {
     String date = _formatDate(dateTime);
     String heure = _formatTime(dateTime);
-    
+
     String message = '''
 🎬 CINÉAPP - Séance de cinéma 🎬
 
@@ -411,10 +435,10 @@ Qualité : $quality
 
 🍿 Réservez vite sur CinéApp !
 ''';
-    
+
     String encodedMessage = Uri.encodeComponent(message);
     String whatsappUrl = 'https://wa.me/?text=$encodedMessage';
-    
+
     try {
       await launchUrl(Uri.parse(whatsappUrl));
     } catch (e) {
@@ -426,19 +450,21 @@ Qualité : $quality
     }
   }
 
-  Future<void> _addToCalendar(String filmName, String salleName, DateTime? dateTime, String format, String quality) async {
+  Future<void> _addToCalendar(String filmName, String salleName,
+      DateTime? dateTime, String format, String quality) async {
     if (dateTime == null) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Date non disponible pour cette séance')),
+          const SnackBar(
+              content: Text('Date non disponible pour cette séance')),
         );
       }
       return;
     }
-    
+
     String date = _formatDate(dateTime);
     String heure = _formatTime(dateTime);
-    
+
     String calendarEvent = '''
 📅 SÉANCE CINÉAPP
 
@@ -451,27 +477,30 @@ Qualité : $quality
 
 🍿 À ne pas manquer !
 ''';
-    
+
     await Clipboard.setData(ClipboardData(text: calendarEvent));
-    
+
     if (mounted) {
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
           backgroundColor: const Color(0xFF1A1A1A),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           title: const Row(
             children: [
               Icon(Icons.calendar_today, color: Color(0xFFE50914)),
               SizedBox(width: 10),
-              Text('Ajouter au calendrier', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              Text('Ajouter au calendrier',
+                  style: TextStyle(
+                      color: Colors.white, fontWeight: FontWeight.bold)),
             ],
           ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Les informations de la séance ont été copiées.', 
+              const Text('Les informations de la séance ont été copiées.',
                   style: TextStyle(color: Colors.white70)),
               const SizedBox(height: 16),
               Container(
@@ -480,33 +509,41 @@ Qualité : $quality
                   color: const Color(0xFF2A2A2A),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Text(calendarEvent, style: const TextStyle(color: Colors.white, fontSize: 12)),
+                child: Text(calendarEvent,
+                    style: const TextStyle(color: Colors.white, fontSize: 12)),
               ),
               const SizedBox(height: 16),
-              const Text('Ouvrez votre agenda, créez un nouvel événement et collez les informations.',
+              const Text(
+                  'Ouvrez votre agenda, créez un nouvel événement et collez les informations.',
                   style: TextStyle(color: Colors.white60, fontSize: 12)),
             ],
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('OK', style: TextStyle(color: Color(0xFFE50914), fontWeight: FontWeight.bold)),
+              child: const Text('OK',
+                  style: TextStyle(
+                      color: Color(0xFFE50914), fontWeight: FontWeight.bold)),
             ),
             ElevatedButton(
               onPressed: () async {
                 Navigator.pop(context);
                 try {
-                  await launchUrl(Uri.parse('content://com.android.calendar/time/'));
+                  await launchUrl(
+                      Uri.parse('content://com.android.calendar/time/'));
                 } catch (e) {
                   if (mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Ouvrez votre agenda manuellement')),
+                      const SnackBar(
+                          content: Text('Ouvrez votre agenda manuellement')),
                     );
                   }
                 }
               },
-              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFE50914)),
-              child: const Text('Ouvrir agenda', style: TextStyle(color: Colors.white)),
+              style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFE50914)),
+              child: const Text('Ouvrir agenda',
+                  style: TextStyle(color: Colors.white)),
             ),
           ],
         ),
@@ -518,7 +555,9 @@ Qualité : $quality
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => UpdateseanceWidget(seanceRef: FirebaseFirestore.instance.collection('seances').doc(docId)),
+        builder: (context) => UpdateseanceWidget(
+            seanceRef:
+                FirebaseFirestore.instance.collection('seances').doc(docId)),
       ),
     );
   }
@@ -529,8 +568,10 @@ Qualité : $quality
       builder: (context) => AlertDialog(
         backgroundColor: const Color(0xFF1A1A1A),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        title: const Text('Supprimer la séance', style: TextStyle(color: Colors.white)),
-        content: const Text('Voulez-vous vraiment supprimer cette séance ?', style: TextStyle(color: Colors.white70)),
+        title: const Text('Supprimer la séance',
+            style: TextStyle(color: Colors.white)),
+        content: const Text('Voulez-vous vraiment supprimer cette séance ?',
+            style: TextStyle(color: Colors.white70)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -538,14 +579,18 @@ Qualité : $quality
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Supprimer', style: TextStyle(color: Color(0xFFE50914))),
+            child: const Text('Supprimer',
+                style: TextStyle(color: Color(0xFFE50914))),
           ),
         ],
       ),
     );
-    
+
     if (confirm == true) {
-      await FirebaseFirestore.instance.collection('seances').doc(docId).delete();
+      await FirebaseFirestore.instance
+          .collection('seances')
+          .doc(docId)
+          .delete();
       if (mounted) {
         setState(() {});
         ScaffoldMessenger.of(context).showSnackBar(
@@ -592,7 +637,6 @@ Qualité : $quality
                       ),
                     ),
                     const SizedBox(height: 20),
-                    
                     Row(
                       children: [
                         ClipRRect(
@@ -608,7 +652,8 @@ Qualité : $quality
                                   width: 100,
                                   height: 140,
                                   color: const Color(0xFF2A2A2A),
-                                  child: const Icon(Icons.movie, size: 40, color: Color(0xFFAAAAAA)),
+                                  child: const Icon(Icons.movie,
+                                      size: 40, color: Color(0xFFAAAAAA)),
                                 ),
                         ),
                         const SizedBox(width: 16),
@@ -618,51 +663,64 @@ Qualité : $quality
                             children: [
                               Text(
                                 seance.filmTitle,
-                                style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                                style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold),
                                 maxLines: 3,
                               ),
                               const SizedBox(height: 12),
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 10, vertical: 5),
                                 decoration: BoxDecoration(
                                   color: const Color(0xFFE50914),
                                   borderRadius: BorderRadius.circular(20),
                                 ),
                                 child: Text(
                                   _formatHourMinute(seance.dateTime),
-                                  style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
+                                  style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.bold),
                                 ),
                               ),
                               const SizedBox(height: 8),
                               Row(
                                 children: [
-                                  Icon(Icons.calendar_today, size: 14, color: Colors.grey[400]),
+                                  Icon(Icons.calendar_today,
+                                      size: 14, color: Colors.grey[400]),
                                   const SizedBox(width: 6),
                                   Text(
                                     _formatDate(seance.dateTime),
-                                    style: TextStyle(color: Colors.grey[400], fontSize: 13),
+                                    style: TextStyle(
+                                        color: Colors.grey[400], fontSize: 13),
                                   ),
                                 ],
                               ),
                               const SizedBox(height: 4),
                               Row(
                                 children: [
-                                  Icon(Icons.location_on, size: 14, color: Colors.grey[400]),
+                                  Icon(Icons.location_on,
+                                      size: 14, color: Colors.grey[400]),
                                   const SizedBox(width: 6),
                                   Text(
                                     seance.salleName,
-                                    style: TextStyle(color: Colors.grey[400], fontSize: 13),
+                                    style: TextStyle(
+                                        color: Colors.grey[400], fontSize: 13),
                                   ),
                                 ],
                               ),
                               const SizedBox(height: 4),
                               Row(
                                 children: [
-                                  Icon(Icons.ondemand_video, size: 14, color: Colors.grey[400]),
+                                  Icon(Icons.ondemand_video,
+                                      size: 14, color: Colors.grey[400]),
                                   const SizedBox(width: 6),
                                   Text(
                                     '${seance.format.toUpperCase()} - ${seance.quality}',
-                                    style: TextStyle(color: Colors.grey[400], fontSize: 13),
+                                    style: TextStyle(
+                                        color: Colors.grey[400], fontSize: 13),
                                   ),
                                 ],
                               ),
@@ -672,31 +730,32 @@ Qualité : $quality
                       ],
                     ),
                     const SizedBox(height: 20),
-                    
                     if (seance.description.isNotEmpty)
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text('Synopsis', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                          const Text('Synopsis',
+                              style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold)),
                           const SizedBox(height: 8),
                           Text(
                             seance.description,
-                            style: const TextStyle(color: Colors.white70, fontSize: 13),
+                            style: const TextStyle(
+                                color: Colors.white70, fontSize: 13),
                           ),
                         ],
                       ),
                     const SizedBox(height: 20),
-                    
                     if (seance.dateTime != null)
                       WeatherForDate(
                         date: seance.dateTime!,
                         ville: 'Tunis',
                       ),
-                    
                     const SizedBox(height: 20),
                     const Divider(color: Color(0xFF2A2A2A)),
                     const SizedBox(height: 16),
-                    
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
@@ -706,7 +765,8 @@ Qualité : $quality
                           color: const Color(0xFF25D366),
                           onTap: () {
                             Navigator.pop(context);
-                            _shareToWhatsApp(seance.filmTitle, seance.salleName, seance.dateTime, seance.format, seance.quality);
+                            _shareToWhatsApp(seance.filmTitle, seance.salleName,
+                                seance.dateTime, seance.format, seance.quality);
                           },
                         ),
                         _buildModalButton(
@@ -715,7 +775,8 @@ Qualité : $quality
                           color: const Color(0xFFE50914),
                           onTap: () {
                             Navigator.pop(context);
-                            _addToCalendar(seance.filmTitle, seance.salleName, seance.dateTime, seance.format, seance.quality);
+                            _addToCalendar(seance.filmTitle, seance.salleName,
+                                seance.dateTime, seance.format, seance.quality);
                           },
                         ),
                         _buildModalButton(
@@ -726,7 +787,8 @@ Qualité : $quality
                             Navigator.pop(context);
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
-                                content: Text('🎬 Réservation pour "${seance.filmTitle}"'),
+                                content: Text(
+                                    '🎬 Réservation pour "${seance.filmTitle}"'),
                                 backgroundColor: const Color(0xFF0A7407),
                               ),
                             );
@@ -734,7 +796,6 @@ Qualité : $quality
                         ),
                       ],
                     ),
-                    
                     if (_isOwner) ...[
                       const SizedBox(height: 16),
                       const Divider(color: Color(0xFF2A2A2A)),
@@ -811,9 +872,11 @@ Qualité : $quality
         leading: FlutterFlowIconButton(
           borderRadius: 10.0,
           buttonSize: 42.0,
-          icon: const Icon(Icons.arrow_back_rounded, color: Colors.white, size: 22.0),
+          icon: const Icon(Icons.arrow_back_rounded,
+              color: Colors.white, size: 22.0),
           onPressed: () async {
-            Navigator.push(context, MaterialPageRoute(builder: (context) => HomexWidget()));
+            Navigator.push(context,
+                MaterialPageRoute(builder: (context) => HomexWidget()));
           },
         ),
         title: Container(
@@ -823,18 +886,22 @@ Qualité : $quality
             style: const TextStyle(color: Colors.white, fontSize: 14),
             decoration: InputDecoration(
               hintText: 'Rechercher un film...',
-              hintStyle: const TextStyle(color: Color(0xFFAAAAAA), fontSize: 13),
+              hintStyle:
+                  const TextStyle(color: Color(0xFFAAAAAA), fontSize: 13),
               filled: true,
               fillColor: const Color(0xFF1C1C1C),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(10.0),
                 borderSide: BorderSide.none,
               ),
-              prefixIcon: const Icon(Icons.search, color: Color(0xFFAAAAAA), size: 20),
+              prefixIcon:
+                  const Icon(Icons.search, color: Color(0xFFAAAAAA), size: 20),
               suffixIcon: _searchQuery.isNotEmpty
                   ? IconButton(
-                      icon: const Icon(Icons.clear, color: Color(0xFFAAAAAA), size: 18),
+                      icon: const Icon(Icons.clear,
+                          color: Color(0xFFAAAAAA), size: 18),
                       onPressed: () {
                         setState(() {
                           _searchQuery = '';
@@ -860,7 +927,8 @@ Qualité : $quality
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const OwnerDashboardWidget()),
+                  MaterialPageRoute(
+                      builder: (context) => const OwnerDashboardWidget()),
                 );
               },
               tooltip: 'Dashboard Owner',
@@ -871,7 +939,10 @@ Qualité : $quality
               child: IconButton(
                 icon: const Icon(Icons.add, color: Color(0xFFE50914), size: 24),
                 onPressed: () async {
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => AddseanceWidget()));
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => AddseanceWidget()));
                 },
                 tooltip: 'Ajouter une séance',
                 padding: EdgeInsets.zero,
@@ -918,7 +989,6 @@ Qualité : $quality
               ],
             ),
           ),
-          
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: Row(
@@ -926,26 +996,36 @@ Qualité : $quality
               children: [
                 const Text(
                   'Séances disponibles',
-                  style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold),
                 ),
                 // BOUTON ACTUALITÉS
                 GestureDetector(
                   onTap: _showNewsModal,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                     decoration: BoxDecoration(
                       color: const Color(0xFFE50914).withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: const Color(0xFFE50914).withValues(alpha: 0.3)),
+                      border: Border.all(
+                          color:
+                              const Color(0xFFE50914).withValues(alpha: 0.3)),
                     ),
                     child: const Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.newspaper, color: Color(0xFFE50914), size: 16),
+                        Icon(Icons.newspaper,
+                            color: Color(0xFFE50914), size: 16),
                         SizedBox(width: 6),
                         Text(
                           'Actualités',
-                          style: TextStyle(color: Color(0xFFE50914), fontSize: 12, fontWeight: FontWeight.w500),
+                          style: TextStyle(
+                              color: Color(0xFFE50914),
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500),
                         ),
                       ],
                     ),
@@ -954,7 +1034,6 @@ Qualité : $quality
               ],
             ),
           ),
-          
           Expanded(
             child: StreamBuilder<QuerySnapshot>(
               stream: FirebaseFirestore.instance
@@ -963,32 +1042,37 @@ Qualité : $quality
                   .snapshots(),
               builder: (context, snapshot) {
                 if (!snapshot.hasData) {
-                  return const Center(child: CircularProgressIndicator(color: Color(0xFFE50914)));
+                  return const Center(
+                      child:
+                          CircularProgressIndicator(color: Color(0xFFE50914)));
                 }
-                
+
                 var allSeances = snapshot.data!.docs;
-                
+
                 var filteredSeances = allSeances.where((doc) {
                   var data = doc.data() as Map<String, dynamic>;
                   String? filmName = data['filmName'] as String?;
-                  DateTime? dateTime = (data['dateTime'] as Timestamp?)?.toDate();
-                  
+                  DateTime? dateTime =
+                      (data['dateTime'] as Timestamp?)?.toDate();
+
                   bool matchesSearch = _searchQuery.isEmpty ||
                       (filmName?.toLowerCase().contains(_searchQuery) ?? false);
                   bool matchesDate = _matchesDateFilter(dateTime);
                   return matchesSearch && matchesDate;
                 }).toList();
-                
+
                 if (filteredSeances.isEmpty) {
                   return Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(Icons.movie_filter, size: 56, color: Color(0xFFAAAAAA)),
+                        const Icon(Icons.movie_filter,
+                            size: 56, color: Color(0xFFAAAAAA)),
                         const SizedBox(height: 16),
                         Text(
                           _getEmptyMessage(),
-                          style: const TextStyle(color: Color(0xFFAAAAAA), fontSize: 15),
+                          style: const TextStyle(
+                              color: Color(0xFFAAAAAA), fontSize: 15),
                           textAlign: TextAlign.center,
                         ),
                         if (_searchQuery.isNotEmpty || _dateFilter != 'tous')
@@ -1001,13 +1085,15 @@ Qualité : $quality
                                 _selectedDate = null;
                               });
                             },
-                            child: const Text('Effacer les filtres', style: TextStyle(color: Color(0xFFE50914), fontSize: 13)),
+                            child: const Text('Effacer les filtres',
+                                style: TextStyle(
+                                    color: Color(0xFFE50914), fontSize: 13)),
                           ),
                       ],
                     ),
                   );
                 }
-                
+
                 return ListView.builder(
                   padding: const EdgeInsets.all(12),
                   itemCount: filteredSeances.length,
@@ -1024,7 +1110,7 @@ Qualité : $quality
       ),
     );
   }
-  
+
   Widget _buildSeanceCard(String docId, Map<String, dynamic> data) {
     String salleName = data['salleName'] as String? ?? 'Salle non assignée';
     DateTime? dateTime = (data['dateTime'] as Timestamp?)?.toDate();
@@ -1032,7 +1118,7 @@ Qualité : $quality
     String? filmId = data['filmId'] as String?;
     String format = data['format'] as String? ?? 'VO';
     String quality = data['quality'] as String? ?? '2D';
-    
+
     return FutureBuilder<DocumentSnapshot>(
       future: filmId != null && filmId.isNotEmpty
           ? FirebaseFirestore.instance.collection('films').doc(filmId).get()
@@ -1042,17 +1128,21 @@ Qualité : $quality
         String filmDescription = '';
         String filmImage = '';
         String filmRealisateur = '';
-        
+
         if (filmSnapshot.hasData && filmSnapshot.data!.exists) {
           final filmData = filmSnapshot.data!.data() as Map<String, dynamic>?;
           if (filmData != null) {
             filmTitle = filmData['title'] ?? filmData['titre'] ?? filmName;
-            filmDescription = filmData['desription'] ?? filmData['description'] ?? '';
-            filmImage = filmData['image'] ?? filmData['poster_path'] ?? filmData['imageUrl'] ?? '';
+            filmDescription =
+                filmData['desription'] ?? filmData['description'] ?? '';
+            filmImage = filmData['image'] ??
+                filmData['poster_path'] ??
+                filmData['imageUrl'] ??
+                '';
             filmRealisateur = filmData['realisateur'] ?? '';
           }
         }
-        
+
         final seanceData = SeanceData(
           id: docId,
           filmTitle: filmTitle,
@@ -1064,7 +1154,7 @@ Qualité : $quality
           image: filmImage,
           realisateur: filmRealisateur,
         );
-        
+
         return GestureDetector(
           onTap: () => _showSeanceModal(seanceData),
           child: Container(
@@ -1086,36 +1176,41 @@ Qualité : $quality
                             width: 60,
                             height: 80,
                             fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) => Container(
+                            errorBuilder: (context, error, stackTrace) =>
+                                Container(
                               width: 60,
                               height: 80,
                               color: const Color(0xFF2A2A2A),
-                              child: const Icon(Icons.movie, color: Color(0xFFAAAAAA), size: 28),
+                              child: const Icon(Icons.movie,
+                                  color: Color(0xFFAAAAAA), size: 28),
                             ),
                           )
                         : Container(
                             width: 60,
                             height: 80,
                             color: const Color(0xFF2A2A2A),
-                            child: const Icon(Icons.movie, color: Color(0xFFAAAAAA), size: 28),
+                            child: const Icon(Icons.movie,
+                                color: Color(0xFFAAAAAA), size: 28),
                           ),
                   ),
                   const SizedBox(width: 14),
-                  
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
                           filmTitle,
-                          style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                          style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
                         const SizedBox(height: 8),
-                        
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
                             color: const Color(0xFF1C1C1C),
                             borderRadius: BorderRadius.circular(6),
@@ -1123,32 +1218,39 @@ Qualité : $quality
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const Icon(Icons.calendar_today, size: 12, color: Color(0xFFE50914)),
+                              const Icon(Icons.calendar_today,
+                                  size: 12, color: Color(0xFFE50914)),
                               const SizedBox(width: 6),
                               Text(
                                 _formatDayMonth(dateTime),
-                                style: const TextStyle(color: Colors.white70, fontSize: 12),
+                                style: const TextStyle(
+                                    color: Colors.white70, fontSize: 12),
                               ),
                               const SizedBox(width: 10),
-                              const Icon(Icons.access_time, size: 12, color: Color(0xFFE50914)),
+                              const Icon(Icons.access_time,
+                                  size: 12, color: Color(0xFFE50914)),
                               const SizedBox(width: 6),
                               Text(
                                 _formatHourMinute(dateTime),
-                                style: const TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.w500),
+                                style: const TextStyle(
+                                    color: Colors.white70,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w500),
                               ),
                             ],
                           ),
                         ),
                         const SizedBox(height: 8),
-                        
                         Row(
                           children: [
-                            const Icon(Icons.location_on, size: 12, color: Color(0xFFAAAAAA)),
+                            const Icon(Icons.location_on,
+                                size: 12, color: Color(0xFFAAAAAA)),
                             const SizedBox(width: 6),
                             Expanded(
                               child: Text(
                                 salleName,
-                                style: const TextStyle(color: Color(0xFFAAAAAA), fontSize: 12),
+                                style: const TextStyle(
+                                    color: Color(0xFFAAAAAA), fontSize: 12),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -1156,30 +1258,36 @@ Qualité : $quality
                           ],
                         ),
                         const SizedBox(height: 6),
-                        
                         Wrap(
                           spacing: 6,
                           children: [
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 6, vertical: 3),
                               decoration: BoxDecoration(
-                                color: const Color(0xFFE50914).withValues(alpha: 0.2),
+                                color: const Color(0xFFE50914)
+                                    .withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(6),
                               ),
                               child: Text(
                                 format.toUpperCase(),
-                                style: const TextStyle(color: Color(0xFFE50914), fontSize: 11, fontWeight: FontWeight.w600),
+                                style: const TextStyle(
+                                    color: Color(0xFFE50914),
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600),
                               ),
                             ),
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 6, vertical: 3),
                               decoration: BoxDecoration(
                                 color: const Color(0xFF1C1C1C),
                                 borderRadius: BorderRadius.circular(6),
                               ),
                               child: Text(
                                 quality,
-                                style: const TextStyle(color: Color(0xFFAAAAAA), fontSize: 11),
+                                style: const TextStyle(
+                                    color: Color(0xFFAAAAAA), fontSize: 11),
                               ),
                             ),
                           ],
@@ -1187,28 +1295,29 @@ Qualité : $quality
                       ],
                     ),
                   ),
-                  
                   if (_isOwner)
                     Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         IconButton(
                           onPressed: () => _editSeance(docId),
-                          icon: const Icon(Icons.edit, color: Color(0xFF0A7407), size: 20),
+                          icon: const Icon(Icons.edit,
+                              color: Color(0xFF0A7407), size: 20),
                           padding: EdgeInsets.zero,
                           constraints: const BoxConstraints(),
                         ),
                         const SizedBox(width: 6),
                         IconButton(
                           onPressed: () => _deleteSeance(docId),
-                          icon: const Icon(Icons.delete, color: Color(0xFFE50914), size: 20),
+                          icon: const Icon(Icons.delete,
+                              color: Color(0xFFE50914), size: 20),
                           padding: EdgeInsets.zero,
                           constraints: const BoxConstraints(),
                         ),
                       ],
                     ),
-                  
-                  const Icon(Icons.chevron_right, color: Color(0xFFAAAAAA), size: 24),
+                  const Icon(Icons.chevron_right,
+                      color: Color(0xFFAAAAAA), size: 24),
                 ],
               ),
             ),
@@ -1217,8 +1326,9 @@ Qualité : $quality
       },
     );
   }
-  
-  Widget _buildDateFilterChip(String label, String filterType, {DateTime? specificDate}) {
+
+  Widget _buildDateFilterChip(String label, String filterType,
+      {DateTime? specificDate}) {
     bool isSelected = false;
     if (filterType == 'tous') {
       isSelected = _dateFilter == 'tous';
@@ -1231,7 +1341,7 @@ Qualité : $quality
     } else {
       isSelected = _selectedDate == specificDate;
     }
-    
+
     return GestureDetector(
       onTap: () async {
         if (filterType == 'calendar') {
@@ -1263,7 +1373,8 @@ Qualité : $quality
         decoration: BoxDecoration(
           color: isSelected ? const Color(0xFFE50914) : const Color(0xFF1C1C1C),
           borderRadius: BorderRadius.circular(20),
-          border: isSelected ? null : Border.all(color: const Color(0xFF333333)),
+          border:
+              isSelected ? null : Border.all(color: const Color(0xFF333333)),
         ),
         child: Text(
           label,
@@ -1277,12 +1388,12 @@ Qualité : $quality
       ),
     );
   }
-  
+
   String _getDayName(DateTime date) {
     const days = ['LUN', 'MAR', 'MER', 'JEU', 'VEN', 'SAM', 'DIM'];
     return days[date.weekday - 1];
   }
-  
+
   String _getEmptyMessage() {
     if (_searchQuery.isNotEmpty && _dateFilter != 'tous') {
       return 'Aucun film trouvé\npour cette recherche et date';
@@ -1290,9 +1401,12 @@ Qualité : $quality
       return 'Aucun film trouvé pour\n"$_searchQuery"';
     } else if (_dateFilter != 'tous') {
       String dateText = '';
-      if (_dateFilter == 'aujourdhui') dateText = "aujourd'hui";
-      else if (_dateFilter == 'demain') dateText = 'demain';
-      else if (_selectedDate != null) dateText = 'le ${_selectedDate!.day}/${_selectedDate!.month}';
+      if (_dateFilter == 'aujourdhui')
+        dateText = "aujourd'hui";
+      else if (_dateFilter == 'demain')
+        dateText = 'demain';
+      else if (_selectedDate != null)
+        dateText = 'le ${_selectedDate!.day}/${_selectedDate!.month}';
       return 'Aucune séance $dateText';
     }
     return 'Aucune séance disponible';
