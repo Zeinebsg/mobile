@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "971210585607",
+    "project_id": "fricasse-4dv7jn",
+    "storage_bucket": "fricasse-4dv7jn.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:971210585607:android:acd70307d7708f28855ca2",
+        "android_client_info": {
+          "package_name": "com.moviea"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDAOdOerxj-EONBqKbk61D0qKwEMkpjmqU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
