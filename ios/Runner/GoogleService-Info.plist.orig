@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>API_KEY</key>
+<<<<<<< HEAD
+	<string>AIzaSyCFaF2YwvOMEaP7LQo-_bUKA1eSiUh245c</string>
+	<key>GCM_SENDER_ID</key>
+	<string>584176998095</string>
+=======
+	<string>AIzaSyAXC1XQUYxB1D2IpaQ04SewARxxa8-9xh4</string>
+	<key>GCM_SENDER_ID</key>
+	<string>729591782379</string>
+>>>>>>> billets
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.moviea</string>
+	<key>PROJECT_ID</key>
+<<<<<<< HEAD
+	<string>fricasse-sb3fj7</string>
+	<key>STORAGE_BUCKET</key>
+	<string>fricasse-sb3fj7.firebasestorage.app</string>
+=======
+	<string>fricasse-arp8ru</string>
+	<key>STORAGE_BUCKET</key>
+	<string>fricasse-arp8ru.firebasestorage.app</string>
+>>>>>>> billets
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+<<<<<<< HEAD
+	<string>1:584176998095:ios:bbb3e8f440d61155cb49ba</string>
+=======
+	<string>1:729591782379:ios:369486f5806d705de597ae</string>
+>>>>>>> billets
+</dict>
+</plist>

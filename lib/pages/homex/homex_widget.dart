@@ -9,6 +9,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'homex_model.dart';
 export 'homex_model.dart';
 import '../voirfilm/voirfilm_widget.dart';
+import '../billet_user/billet_user_widget.dart';
 
 /// Create a page home for a cinema reservation  application withe theme black
 /// and red where it gonna be affiche=ées les seances de film disponible  add
@@ -394,7 +395,13 @@ class _HomexWidgetState extends State<HomexWidget> {
                                             0.0, 16.0, 0.0, 0.0),
                                         child: FFButtonWidget(
                                           onPressed: () {
-                                            print('Button pressed ...');
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) =>
+                                                    const BilletUserWidget(),
+                                              ),
+                                            );
                                           },
                                           text: 'Réserver Maintenant',
                                           options: FFButtonOptions(
@@ -1129,7 +1136,8 @@ class _HomexWidgetState extends State<HomexWidget> {
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (context) =>  const VoirfilmWidget(),
+                                        builder: (context) =>
+                                            const VoirfilmWidget(),
                                       ),
                                     );
                                   },

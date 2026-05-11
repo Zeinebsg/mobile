@@ -1,0 +1,2564 @@
+import '/auth/firebase_auth/auth_util.dart';
+<<<<<<< HEAD
+import '/backend/backend.dart';
+import '/flutter_flow/flutter_flow_icon_button.dart';
+import '/flutter_flow/flutter_flow_util.dart';
+import '/flutter_flow/flutter_flow_widgets.dart';
+import '/index.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'seanaces_model.dart';
+export 'seanaces_model.dart';
+import '../owner_dashboard/owner_dashboard_widget.dart';
+import '../../widgets/news_widget.dart';
+
+// ============================================================
+// WIDGET MÉTÉO POUR UNE DATE SPÉCIFIQUE
+// ============================================================
+class WeatherForDate extends StatefulWidget {
+  final DateTime date;
+  final String ville;
+  
+  const WeatherForDate({
+    super.key, 
+    required this.date,
+    this.ville = 'Tunis',
+  });
+
+  @override
+  State<WeatherForDate> createState() => _WeatherForDateState();
+}
+
+class _WeatherForDateState extends State<WeatherForDate> {
+  late Future<Map<String, dynamic>> _weatherFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _weatherFuture = _getWeatherForDate();
+  }
+
+  Future<Map<String, dynamic>> _getWeatherForDate() async {
+    const apiKey = 'f30874a9d31218b439a29e45a2a7fc3c';
+    
+    final url = Uri.parse(
+      'https://api.openweathermap.org/data/2.5/forecast?q=${widget.ville}&appid=$apiKey&units=metric&lang=fr&cnt=40'
+    );
+    
+    try {
+      final response = await http.get(url);
+      
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        final List<dynamic> forecasts = data['list'];
+        
+        final targetDate = DateTime(widget.date.year, widget.date.month, widget.date.day);
+        Map<String, dynamic>? weatherForDay;
+        
+        for (var forecast in forecasts) {
+          final forecastDate = DateTime.parse(forecast['dt_txt']);
+          final forecastDay = DateTime(forecastDate.year, forecastDate.month, forecastDate.day);
+          
+          if (forecastDay == targetDate) {
+            weatherForDay = forecast;
+            break;
+          }
+        }
+        
+        if (weatherForDay != null) {
+          final temp = (weatherForDay['main']['temp'] as num).toDouble();
+          final condition = weatherForDay['weather'][0]['description'] as String;
+          final humidity = weatherForDay['main']['humidity'];
+          final windSpeed = weatherForDay['wind']['speed'];
+          
+          String messagePrecaution = '';
+          int couleurValue = 0xFF2196F3;
+          String icone = '🌤️';
+          
+          if (temp <= 5) {
+            messagePrecaution = '❄️ FROID : Couvrez-vous bien !';
+            couleurValue = 0xFF00BCD4;
+            icone = '❄️';
+          } else if (temp >= 35) {
+            messagePrecaution = '☀️ CANICULE : Hydratez-vous !';
+            couleurValue = 0xFFFF9800;
+            icone = '☀️';
+          } else if (condition.contains('pluie')) {
+            messagePrecaution = '☔ PLUIE : Prenez un parapluie !';
+            couleurValue = 0xFF4FC3F7;
+            icone = '☔';
+          } else if (condition.contains('orage')) {
+            messagePrecaution = '⚡ ORAGE : Restez en sécurité !';
+            couleurValue = 0xFFF44336;
+            icone = '⚡';
+          } else if (windSpeed >= 15) {
+            messagePrecaution = '💨 VENT FORT : Soyez prudent !';
+            couleurValue = 0xFF9E9E9E;
+            icone = '💨';
+          } else if (humidity >= 80) {
+            messagePrecaution = '💧 HUMIDE : Prévoyez une veste.';
+            couleurValue = 0xFF29B6F6;
+            icone = '💧';
+          } else if (condition.contains('soleil') || condition.contains('dégagé')) {
+            messagePrecaution = '😎 Beau temps ! Bon cinéma !';
+            couleurValue = 0xFFFFC107;
+            icone = '😎';
+          } else {
+            messagePrecaution = '🎬 Bonne séance de cinéma !';
+            couleurValue = 0xFFE50914;
+            icone = '🎬';
+          }
+          
+          return {
+            'success': true,
+            'temperature': temp.round(),
+            'condition': condition,
+            'message': messagePrecaution,
+            'couleur': couleurValue,
+            'icone': icone,
+          };
+        } else {
+          return {
+            'success': false,
+            'message': '⚠️ Météo non dispo',
+            'couleur': 0xFF757575,
+            'icone': '⚠️',
+          };
+        }
+      } else {
+        return {
+          'success': false,
+          'message': '⚠️ Météo non dispo',
+          'couleur': 0xFF757575,
+          'icone': '⚠️',
+        };
+      }
+    } catch (e) {
+      return {
+        'success': false,
+        'message': '❌ Erreur',
+        'couleur': 0xFFF44336,
+        'icone': '❌',
+      };
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<Map<String, dynamic>>(
+      future: _weatherFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Container(
+            padding: const EdgeInsets.all(8),
+            child: const Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Color(0xFFE50914),
+                  ),
+                ),
+                SizedBox(width: 8),
+                Text('Météo...', style: TextStyle(color: Colors.white70, fontSize: 12)),
+              ],
+            ),
+          );
+        }
+
+        if (snapshot.hasError || (snapshot.hasData && snapshot.data!['success'] == false)) {
+          final errorMsg = snapshot.hasData ? snapshot.data!['message'] : 'Erreur';
+          return Container(
+            padding: const EdgeInsets.all(8),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.warning, color: Color(0xFFE50914), size: 16),
+                const SizedBox(width: 6),
+                Text(errorMsg, style: const TextStyle(color: Colors.white60, fontSize: 11)),
+              ],
+            ),
+          );
+        }
+
+        if (snapshot.hasData) {
+          final data = snapshot.data!;
+          final couleur = Color(data['couleur'] as int);
+          
+          return Container(
+            margin: const EdgeInsets.only(top: 8),
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [couleur, couleur.withValues(alpha: 0.8)],
+              ),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.2),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Center(
+                    child: Text(data['icone'], style: const TextStyle(fontSize: 18)),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.thermostat, size: 12, color: Colors.white70),
+                        const SizedBox(width: 4),
+                        Text(
+                          '${data['temperature']}°C',
+                          style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold),
+                        ),
+                      ],
+                    ),
+                    Text(
+                      data['condition'],
+                      style: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontSize: 11),
+                    ),
+                  ],
+                ),
+                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Text(
+                    data['message'],
+                    style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w500),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+
+        return const SizedBox.shrink();
+      },
+    );
+  }
+}
+
+class SeanacesWidget extends StatefulWidget {
+  const SeanacesWidget({super.key, this.selectedSeanceId});
+
+  final String? selectedSeanceId;
+=======
+import '/flutter_flow/flutter_flow_icon_button.dart';
+import '/flutter_flow/flutter_flow_theme.dart';
+import '/flutter_flow/flutter_flow_util.dart';
+import '/flutter_flow/flutter_flow_widgets.dart';
+import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'seanaces_model.dart';
+export 'seanaces_model.dart';
+
+/// generate a page dans le meme theme la ou les seances  de projection des
+/// film  disponibles vont etre affichées avec les date et tous les details
+/// dans le meme style
+///
+class SeanacesWidget extends StatefulWidget {
+  const SeanacesWidget({super.key});
+>>>>>>> billets
+
+  static String routeName = 'seanaces';
+  static String routePath = '/seanaces';
+
+  @override
+  State<SeanacesWidget> createState() => _SeanacesWidgetState();
+}
+
+class _SeanacesWidgetState extends State<SeanacesWidget> {
+  late SeanacesModel _model;
+<<<<<<< HEAD
+  final scaffoldKey = GlobalKey<ScaffoldState>();
+  
+  String _searchQuery = '';
+  final TextEditingController _searchController = TextEditingController();
+  
+  DateTime? _selectedDate;
+  String _dateFilter = 'tous';
+  bool _isOwner = false;
+=======
+
+  final scaffoldKey = GlobalKey<ScaffoldState>();
+>>>>>>> billets
+
+  @override
+  void initState() {
+    super.initState();
+    _model = createModel(context, () => SeanacesModel());
+<<<<<<< HEAD
+    
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkUserRole();
+    });
+  }
+  
+  void _checkUserRole() {
+    final user = currentUserDocument;
+    if (user != null) {
+      setState(() {
+        _isOwner = user.role == 'owner' || user.role == '"owner"';
+      });
+    }
+=======
+>>>>>>> billets
+  }
+
+  @override
+  void dispose() {
+    _model.dispose();
+<<<<<<< HEAD
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  bool _matchesDateFilter(DateTime? seanceDate) {
+    if (seanceDate == null) return false;
+    if (_dateFilter == 'tous') return true;
+    
+    final today = DateTime.now();
+    final seanceDay = DateTime(seanceDate.year, seanceDate.month, seanceDate.day);
+    
+    switch (_dateFilter) {
+      case 'aujourdhui':
+        final todayDay = DateTime(today.year, today.month, today.day);
+        return seanceDay == todayDay;
+      case 'demain':
+        final tomorrowDay = DateTime(today.year, today.month, today.day + 1);
+        return seanceDay == tomorrowDay;
+      default:
+        if (_selectedDate != null) {
+          return seanceDay == _selectedDate;
+        }
+        return true;
+    }
+  }
+
+  String _formatDate(DateTime? dt) {
+    if (dt == null) return 'Date inconnue';
+    return '${dt.day}/${dt.month}/${dt.year}';
+  }
+
+  String _formatTime(DateTime? dt) {
+    if (dt == null) return 'Heure inconnue';
+    return '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
+  }
+
+  String _formatDayMonth(DateTime? dt) {
+    if (dt == null) return 'Date';
+    return '${dt.day}/${dt.month}';
+  }
+
+  String _formatHourMinute(DateTime? dt) {
+    if (dt == null) return 'Horaire';
+    return '${dt.hour.toString().padLeft(2, '0')}h${dt.minute.toString().padLeft(2, '0')}';
+  }
+
+  void _showNewsModal() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        height: MediaQuery.of(context).size.height * 0.85,
+        decoration: const BoxDecoration(
+          color: Color(0xFF1A1A1A),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
+        ),
+        child: Column(
+          children: [
+            const SizedBox(height: 12),
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey[600],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const Padding(
+              padding: EdgeInsets.all(16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    '📰 Actualités Cinéma',
+                    style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  Icon(Icons.movie, color: Color(0xFFE50914)),
+                ],
+              ),
+            ),
+            const Divider(color: Color(0xFF333333), height: 1),
+            Expanded(child: NewsWidget()),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _shareToWhatsApp(String filmName, String salleName, DateTime? dateTime, String format, String quality) async {
+    String date = _formatDate(dateTime);
+    String heure = _formatTime(dateTime);
+    
+    String message = '''
+🎬 CINÉAPP - Séance de cinéma 🎬
+
+Film : $filmName
+Salle : $salleName
+Date : $date
+Horaire : $heure
+Format : ${format.toUpperCase()}
+Qualité : $quality
+
+🍿 Réservez vite sur CinéApp !
+''';
+    
+    String encodedMessage = Uri.encodeComponent(message);
+    String whatsappUrl = 'https://wa.me/?text=$encodedMessage';
+    
+    try {
+      await launchUrl(Uri.parse(whatsappUrl));
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('WhatsApp non installé ?')),
+        );
+      }
+    }
+  }
+
+  Future<void> _addToCalendar(String filmName, String salleName, DateTime? dateTime, String format, String quality) async {
+    if (dateTime == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Date non disponible pour cette séance')),
+        );
+      }
+      return;
+    }
+    
+    String date = _formatDate(dateTime);
+    String heure = _formatTime(dateTime);
+    
+    String calendarEvent = '''
+📅 SÉANCE CINÉAPP
+
+🎬 Film: $filmName
+📍 Salle: $salleName
+📆 Date: $date
+⏰ Heure: $heure
+🎚️ Format: ${format.toUpperCase()}
+🎚️ Qualité: $quality
+
+🍿 À ne pas manquer !
+''';
+    
+    await Clipboard.setData(ClipboardData(text: calendarEvent));
+    
+    if (mounted) {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          backgroundColor: const Color(0xFF1A1A1A),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: const Row(
+            children: [
+              Icon(Icons.calendar_today, color: Color(0xFFE50914)),
+              SizedBox(width: 10),
+              Text('Ajouter au calendrier', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Les informations de la séance ont été copiées.', 
+                  style: TextStyle(color: Colors.white70)),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF2A2A2A),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(calendarEvent, style: const TextStyle(color: Colors.white, fontSize: 12)),
+              ),
+              const SizedBox(height: 16),
+              const Text('Ouvrez votre agenda, créez un nouvel événement et collez les informations.',
+                  style: TextStyle(color: Colors.white60, fontSize: 12)),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('OK', style: TextStyle(color: Color(0xFFE50914), fontWeight: FontWeight.bold)),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                Navigator.pop(context);
+                try {
+                  await launchUrl(Uri.parse('content://com.android.calendar/time/'));
+                } catch (e) {
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Ouvrez votre agenda manuellement')),
+                    );
+                  }
+                }
+              },
+              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFE50914)),
+              child: const Text('Ouvrir agenda', style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        ),
+      );
+    }
+  }
+
+  Future<void> _editSeance(String docId) async {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => UpdateseanceWidget(seanceRef: FirebaseFirestore.instance.collection('seances').doc(docId)),
+      ),
+    );
+  }
+
+  Future<void> _deleteSeance(String docId) async {
+    final bool? confirm = await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF1A1A1A),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        title: const Text('Supprimer la séance', style: TextStyle(color: Colors.white)),
+        content: const Text('Voulez-vous vraiment supprimer cette séance ?', style: TextStyle(color: Colors.white70)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Annuler', style: TextStyle(color: Colors.grey)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Supprimer', style: TextStyle(color: Color(0xFFE50914))),
+          ),
+        ],
+      ),
+    );
+    
+    if (confirm == true) {
+      await FirebaseFirestore.instance.collection('seances').doc(docId).delete();
+      if (mounted) {
+        setState(() {});
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Séance supprimée avec succès'),
+            backgroundColor: Color(0xFF0A7407),
+          ),
+        );
+      }
+    }
+  }
+
+  void _showSeanceModal(SeanceData seance) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        decoration: const BoxDecoration(
+          color: Color(0xFF1A1A1A),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
+        ),
+        child: DraggableScrollableSheet(
+          initialChildSize: 0.7,
+          minChildSize: 0.5,
+          maxChildSize: 0.9,
+          expand: false,
+          builder: (context, scrollController) {
+            return SingleChildScrollView(
+              controller: scrollController,
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 40,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: Colors.grey[600],
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    
+                    Row(
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: seance.image.isNotEmpty
+                              ? Image.network(
+                                  seance.image,
+                                  width: 100,
+                                  height: 140,
+                                  fit: BoxFit.cover,
+                                )
+                              : Container(
+                                  width: 100,
+                                  height: 140,
+                                  color: const Color(0xFF2A2A2A),
+                                  child: const Icon(Icons.movie, size: 40, color: Color(0xFFAAAAAA)),
+                                ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                seance.filmTitle,
+                                style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                                maxLines: 3,
+                              ),
+                              const SizedBox(height: 12),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFE50914),
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Text(
+                                  _formatHourMinute(seance.dateTime),
+                                  style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Row(
+                                children: [
+                                  Icon(Icons.calendar_today, size: 14, color: Colors.grey[400]),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    _formatDate(seance.dateTime),
+                                    style: TextStyle(color: Colors.grey[400], fontSize: 13),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 4),
+                              Row(
+                                children: [
+                                  Icon(Icons.location_on, size: 14, color: Colors.grey[400]),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    seance.salleName,
+                                    style: TextStyle(color: Colors.grey[400], fontSize: 13),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 4),
+                              Row(
+                                children: [
+                                  Icon(Icons.ondemand_video, size: 14, color: Colors.grey[400]),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    '${seance.format.toUpperCase()} - ${seance.quality}',
+                                    style: TextStyle(color: Colors.grey[400], fontSize: 13),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    
+                    if (seance.description.isNotEmpty)
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('Synopsis', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                          const SizedBox(height: 8),
+                          Text(
+                            seance.description,
+                            style: const TextStyle(color: Colors.white70, fontSize: 13),
+                          ),
+                        ],
+                      ),
+                    const SizedBox(height: 20),
+                    
+                    if (seance.dateTime != null)
+                      WeatherForDate(
+                        date: seance.dateTime!,
+                        ville: 'Tunis',
+                      ),
+                    
+                    const SizedBox(height: 20),
+                    const Divider(color: Color(0xFF2A2A2A)),
+                    const SizedBox(height: 16),
+                    
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        _buildModalButton(
+                          icon: Icons.chat,
+                          label: 'WhatsApp',
+                          color: const Color(0xFF25D366),
+                          onTap: () {
+                            Navigator.pop(context);
+                            _shareToWhatsApp(seance.filmTitle, seance.salleName, seance.dateTime, seance.format, seance.quality);
+                          },
+                        ),
+                        _buildModalButton(
+                          icon: Icons.calendar_today,
+                          label: 'Calendrier',
+                          color: const Color(0xFFE50914),
+                          onTap: () {
+                            Navigator.pop(context);
+                            _addToCalendar(seance.filmTitle, seance.salleName, seance.dateTime, seance.format, seance.quality);
+                          },
+                        ),
+                        _buildModalButton(
+                          icon: Icons.confirmation_num,
+                          label: 'Réserver',
+                          color: const Color(0xFF0A7407),
+                          onTap: () {
+                            Navigator.pop(context);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('🎬 Réservation pour "${seance.filmTitle}"'),
+                                backgroundColor: const Color(0xFF0A7407),
+                              ),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                    
+                    if (_isOwner) ...[
+                      const SizedBox(height: 16),
+                      const Divider(color: Color(0xFF2A2A2A)),
+                      const SizedBox(height: 16),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          _buildModalButton(
+                            icon: Icons.edit,
+                            label: 'Modifier',
+                            color: const Color(0xFF0A7407),
+                            onTap: () {
+                              Navigator.pop(context);
+                              _editSeance(seance.id);
+                            },
+                          ),
+                          _buildModalButton(
+                            icon: Icons.delete,
+                            label: 'Supprimer',
+                            color: const Color(0xFFE50914),
+                            onTap: () {
+                              Navigator.pop(context);
+                              _deleteSeance(seance.id);
+                            },
+                          ),
+                        ],
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildModalButton({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.2),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: color, size: 24),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            label,
+            style: TextStyle(color: Colors.grey[400], fontSize: 12),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFF0A0A0A),
+      appBar: AppBar(
+        backgroundColor: const Color(0xFF0A0A0A),
+        automaticallyImplyLeading: false,
+        leading: FlutterFlowIconButton(
+          borderRadius: 10.0,
+          buttonSize: 42.0,
+          icon: const Icon(Icons.arrow_back_rounded, color: Colors.white, size: 22.0),
+          onPressed: () async {
+            Navigator.push(context, MaterialPageRoute(builder: (context) => HomexWidget()));
+          },
+        ),
+        title: Container(
+          height: 42,
+          child: TextField(
+            controller: _searchController,
+            style: const TextStyle(color: Colors.white, fontSize: 14),
+            decoration: InputDecoration(
+              hintText: 'Rechercher un film...',
+              hintStyle: const TextStyle(color: Color(0xFFAAAAAA), fontSize: 13),
+              filled: true,
+              fillColor: const Color(0xFF1C1C1C),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10.0),
+                borderSide: BorderSide.none,
+              ),
+              prefixIcon: const Icon(Icons.search, color: Color(0xFFAAAAAA), size: 20),
+              suffixIcon: _searchQuery.isNotEmpty
+                  ? IconButton(
+                      icon: const Icon(Icons.clear, color: Color(0xFFAAAAAA), size: 18),
+                      onPressed: () {
+                        setState(() {
+                          _searchQuery = '';
+                          _searchController.clear();
+                        });
+                      },
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                    )
+                  : null,
+            ),
+            onChanged: (value) {
+              setState(() {
+                _searchQuery = value.toLowerCase();
+              });
+            },
+          ),
+        ),
+        actions: [
+          if (_isOwner)
+            IconButton(
+              icon: const Icon(Icons.dashboard, color: Colors.white, size: 24),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const OwnerDashboardWidget()),
+                );
+              },
+              tooltip: 'Dashboard Owner',
+            ),
+          if (_isOwner)
+            Padding(
+              padding: const EdgeInsets.only(right: 12),
+              child: IconButton(
+                icon: const Icon(Icons.add, color: Color(0xFFE50914), size: 24),
+                onPressed: () async {
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => AddseanceWidget()));
+                },
+                tooltip: 'Ajouter une séance',
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(
+                  minWidth: 40,
+                  maxWidth: 40,
+                  minHeight: 40,
+                  maxHeight: 40,
+                ),
+              ),
+            ),
+        ],
+        elevation: 0.0,
+      ),
+      body: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            height: 54,
+            margin: const EdgeInsets.only(top: 6),
+            child: ListView(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              children: [
+                _buildDateFilterChip('Tous', 'tous'),
+                const SizedBox(width: 8),
+                _buildDateFilterChip('Aujourd\'hui', 'aujourdhui'),
+                const SizedBox(width: 8),
+                _buildDateFilterChip('Demain', 'demain'),
+                const SizedBox(width: 8),
+                ...List.generate(7, (index) {
+                  DateTime date = DateTime.now().add(Duration(days: index + 2));
+                  String dayName = _getDayName(date);
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: _buildDateFilterChip(
+                      '$dayName\n${date.day}',
+                      'specific',
+                      specificDate: date,
+                    ),
+                  );
+                }),
+                _buildDateFilterChip('📅', 'calendar'),
+              ],
+            ),
+          ),
+          
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Séances disponibles',
+                  style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                // BOUTON ACTUALITÉS
+                GestureDetector(
+                  onTap: _showNewsModal,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFE50914).withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: const Color(0xFFE50914).withValues(alpha: 0.3)),
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.newspaper, color: Color(0xFFE50914), size: 16),
+                        SizedBox(width: 6),
+                        Text(
+                          'Actualités',
+                          style: TextStyle(color: Color(0xFFE50914), fontSize: 12, fontWeight: FontWeight.w500),
+                        ),
+                      ],
+=======
+
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        FocusScope.of(context).unfocus();
+        FocusManager.instance.primaryFocus?.unfocus();
+      },
+      child: Scaffold(
+        key: scaffoldKey,
+        backgroundColor: Color(0xFF0A0A0A),
+        appBar: AppBar(
+          backgroundColor: Color(0xFF0A0A0A),
+          automaticallyImplyLeading: false,
+          title: Padding(
+            padding: EdgeInsetsDirectional.fromSTEB(16.0, 0.0, 16.0, 0.0),
+            child: Row(
+              mainAxisSize: MainAxisSize.max,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  mainAxisSize: MainAxisSize.max,
+                  children: [
+                    FlutterFlowIconButton(
+                      borderRadius: 12.0,
+                      buttonSize: 40.0,
+                      icon: Icon(
+                        Icons.arrow_back_rounded,
+                        color: Colors.white,
+                        size: 22.0,
+                      ),
+                      onPressed: () {
+                        print('IconButton pressed ...');
+                      },
+                    ),
+                    Text(
+                      'Séances',
+                      style: FlutterFlowTheme.of(context).titleLarge.override(
+                            font: GoogleFonts.poppins(
+                              fontWeight: FontWeight.bold,
+                              fontStyle: FlutterFlowTheme.of(context)
+                                  .titleLarge
+                                  .fontStyle,
+                            ),
+                            color: Colors.white,
+                            fontSize: 22.0,
+                            letterSpacing: 0.0,
+                            fontWeight: FontWeight.bold,
+                            fontStyle: FlutterFlowTheme.of(context)
+                                .titleLarge
+                                .fontStyle,
+                          ),
+                    ),
+                  ].divide(SizedBox(width: 8.0)),
+                ),
+                Row(
+                  mainAxisSize: MainAxisSize.max,
+                  children: [
+                    FlutterFlowIconButton(
+                      borderRadius: 12.0,
+                      buttonSize: 40.0,
+                      icon: Icon(
+                        Icons.search_rounded,
+                        color: Colors.white,
+                        size: 22.0,
+                      ),
+                      onPressed: () {
+                        print('IconButton pressed ...');
+                      },
+                    ),
+                    FlutterFlowIconButton(
+                      borderRadius: 12.0,
+                      buttonSize: 40.0,
+                      icon: Icon(
+                        Icons.tune_rounded,
+                        color: Colors.white,
+                        size: 22.0,
+                      ),
+                      onPressed: () {
+                        print('IconButton pressed ...');
+                      },
+                    ),
+                  ].divide(SizedBox(width: 8.0)),
+                ),
+              ],
+            ),
+          ),
+          actions: [],
+          centerTitle: false,
+          elevation: 0.0,
+        ),
+        body: Column(
+          mainAxisSize: MainAxisSize.max,
+          children: [
+            Padding(
+              padding: EdgeInsetsDirectional.fromSTEB(16.0, 8.0, 16.0, 0.0),
+              child: Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: Color(0xFF0A0A0A),
+                ),
+                child: Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.max,
+                    children: [
+                      Row(
+                        mainAxisSize: MainAxisSize.max,
+                        children: [
+                          Container(
+                            decoration: BoxDecoration(
+                              color: Color(0xFFE50914),
+                              borderRadius: BorderRadius.circular(20.0),
+                            ),
+                            child: Padding(
+                              padding: EdgeInsetsDirectional.fromSTEB(
+                                  14.0, 8.0, 14.0, 8.0),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    'Tous',
+                                    style: FlutterFlowTheme.of(context)
+                                        .bodyMedium
+                                        .override(
+                                          font: GoogleFonts.poppins(
+                                            fontWeight: FontWeight.w600,
+                                            fontStyle:
+                                                FlutterFlowTheme.of(context)
+                                                    .bodyMedium
+                                                    .fontStyle,
+                                          ),
+                                          color: Colors.white,
+                                          fontSize: 13.0,
+                                          letterSpacing: 0.0,
+                                          fontWeight: FontWeight.w600,
+                                          fontStyle:
+                                              FlutterFlowTheme.of(context)
+                                                  .bodyMedium
+                                                  .fontStyle,
+                                        ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          Container(
+                            decoration: BoxDecoration(
+                              color: Color(0xFF1C1C1C),
+                              borderRadius: BorderRadius.circular(20.0),
+                            ),
+                            child: Padding(
+                              padding: EdgeInsetsDirectional.fromSTEB(
+                                  14.0, 8.0, 14.0, 8.0),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    'Aujourd\'hui',
+                                    style: FlutterFlowTheme.of(context)
+                                        .bodyMedium
+                                        .override(
+                                          font: GoogleFonts.poppins(
+                                            fontWeight: FontWeight.w500,
+                                            fontStyle:
+                                                FlutterFlowTheme.of(context)
+                                                    .bodyMedium
+                                                    .fontStyle,
+                                          ),
+                                          color: Color(0xFFAAAAAA),
+                                          fontSize: 13.0,
+                                          letterSpacing: 0.0,
+                                          fontWeight: FontWeight.w500,
+                                          fontStyle:
+                                              FlutterFlowTheme.of(context)
+                                                  .bodyMedium
+                                                  .fontStyle,
+                                        ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ].divide(SizedBox(width: 8.0)),
+                      ),
+                      Row(
+                        mainAxisSize: MainAxisSize.max,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            '12 séances disponibles',
+                            style: FlutterFlowTheme.of(context)
+                                .bodyMedium
+                                .override(
+                                  font: GoogleFonts.poppins(
+                                    fontWeight: FontWeight.normal,
+                                    fontStyle: FlutterFlowTheme.of(context)
+                                        .bodyMedium
+                                        .fontStyle,
+                                  ),
+                                  color: Color(0xFFAAAAAA),
+                                  fontSize: 13.0,
+                                  letterSpacing: 0.0,
+                                  fontWeight: FontWeight.normal,
+                                  fontStyle: FlutterFlowTheme.of(context)
+                                      .bodyMedium
+                                      .fontStyle,
+                                ),
+                          ),
+                          Row(
+                            mainAxisSize: MainAxisSize.max,
+                            children: [
+                              if (valueOrDefault(
+                                      currentUserDocument?.role, '') ==
+                                  '\"owner\"')
+                                AuthUserStreamWidget(
+                                  builder: (context) => FFButtonWidget(
+                                    onPressed: () {
+                                      print('Button pressed ...');
+                                    },
+                                    text: 'ajouter seance',
+                                    options: FFButtonOptions(
+                                      height: 34.0,
+                                      padding: EdgeInsetsDirectional.fromSTEB(
+                                          16.0, 0.0, 16.0, 0.0),
+                                      iconPadding:
+                                          EdgeInsetsDirectional.fromSTEB(
+                                              0.0, 0.0, 0.0, 0.0),
+                                      color: Color(0xFFE50914),
+                                      textStyle: FlutterFlowTheme.of(context)
+                                          .titleSmall
+                                          .override(
+                                            font: GoogleFonts.poppins(
+                                              fontWeight: FontWeight.w600,
+                                              fontStyle:
+                                                  FlutterFlowTheme.of(context)
+                                                      .titleSmall
+                                                      .fontStyle,
+                                            ),
+                                            color: Colors.white,
+                                            fontSize: 13.0,
+                                            letterSpacing: 0.0,
+                                            fontWeight: FontWeight.w600,
+                                            fontStyle:
+                                                FlutterFlowTheme.of(context)
+                                                    .titleSmall
+                                                    .fontStyle,
+                                          ),
+                                      elevation: 0.0,
+                                      borderSide: BorderSide(
+                                        color: Colors.transparent,
+                                        width: 1.0,
+                                      ),
+                                      borderRadius: BorderRadius.circular(8.0),
+                                    ),
+                                  ),
+                                ),
+                            ].divide(SizedBox(width: 4.0)),
+                          ),
+                        ],
+                      ),
+                    ].divide(SizedBox(height: 12.0)),
+                  ),
+                ),
+              ),
+            ),
+            ListView(
+              padding: EdgeInsets.fromLTRB(
+                0,
+                12.0,
+                0,
+                32.0,
+              ),
+              shrinkWrap: true,
+              scrollDirection: Axis.vertical,
+              children: [
+                Padding(
+                  padding:
+                      EdgeInsetsDirectional.fromSTEB(16.0, 0.0, 16.0, 16.0),
+                  child: Container(
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: Color(0xFF161616),
+                      borderRadius: BorderRadius.circular(16.0),
+                      border: Border.all(
+                        color: Color(0xFF2A2A2A),
+                        width: 1.0,
+                      ),
+                    ),
+                    child: Padding(
+                      padding: EdgeInsets.all(16.0),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.max,
+                        children: [
+                          Padding(
+                            padding: EdgeInsetsDirectional.fromSTEB(
+                                0.0, 14.0, 0.0, 12.0),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.max,
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Row(
+                                  mainAxisSize: MainAxisSize.max,
+                                  children: [
+                                    Container(
+                                      decoration: BoxDecoration(
+                                        color: Color(0x33E50914),
+                                        borderRadius:
+                                            BorderRadius.circular(6.0),
+                                      ),
+                                      child: Padding(
+                                        padding: EdgeInsetsDirectional.fromSTEB(
+                                            8.0, 4.0, 8.0, 4.0),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Icon(
+                                              Icons.calendar_today_rounded,
+                                              color: Color(0xFFE50914),
+                                              size: 12.0,
+                                            ),
+                                            Padding(
+                                              padding: EdgeInsetsDirectional
+                                                  .fromSTEB(4.0, 0.0, 4.0, 0.0),
+                                              child: Text(
+                                                'Aujourd\'hui',
+                                                style: FlutterFlowTheme.of(
+                                                        context)
+                                                    .bodyMedium
+                                                    .override(
+                                                      font: GoogleFonts.poppins(
+                                                        fontWeight:
+                                                            FontWeight.w600,
+                                                        fontStyle:
+                                                            FlutterFlowTheme.of(
+                                                                    context)
+                                                                .bodyMedium
+                                                                .fontStyle,
+                                                      ),
+                                                      color: Color(0xFFE50914),
+                                                      fontSize: 11.0,
+                                                      letterSpacing: 0.0,
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                      fontStyle:
+                                                          FlutterFlowTheme.of(
+                                                                  context)
+                                                              .bodyMedium
+                                                              .fontStyle,
+                                                    ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                    Container(
+                                      decoration: BoxDecoration(
+                                        color: Color(0xFF1C1C1C),
+                                        borderRadius:
+                                            BorderRadius.circular(6.0),
+                                      ),
+                                      child: Padding(
+                                        padding: EdgeInsetsDirectional.fromSTEB(
+                                            8.0, 4.0, 8.0, 4.0),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Icon(
+                                              Icons.access_time_rounded,
+                                              color: Color(0xFFAAAAAA),
+                                              size: 12.0,
+                                            ),
+                                            Padding(
+                                              padding: EdgeInsetsDirectional
+                                                  .fromSTEB(4.0, 0.0, 4.0, 0.0),
+                                              child: Text(
+                                                '2h 15min',
+                                                style: FlutterFlowTheme.of(
+                                                        context)
+                                                    .bodyMedium
+                                                    .override(
+                                                      font: GoogleFonts.poppins(
+                                                        fontWeight:
+                                                            FontWeight.w500,
+                                                        fontStyle:
+                                                            FlutterFlowTheme.of(
+                                                                    context)
+                                                                .bodyMedium
+                                                                .fontStyle,
+                                                      ),
+                                                      color: Color(0xFFAAAAAA),
+                                                      fontSize: 11.0,
+                                                      letterSpacing: 0.0,
+                                                      fontWeight:
+                                                          FontWeight.w500,
+                                                      fontStyle:
+                                                          FlutterFlowTheme.of(
+                                                                  context)
+                                                              .bodyMedium
+                                                              .fontStyle,
+                                                    ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ].divide(SizedBox(width: 8.0)),
+                                ),
+                                Container(
+                                  decoration: BoxDecoration(
+                                    color: Color(0xFF1A3A1A),
+                                    borderRadius: BorderRadius.circular(6.0),
+                                  ),
+                                  child: Padding(
+                                    padding: EdgeInsetsDirectional.fromSTEB(
+                                        8.0, 4.0, 8.0, 4.0),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(
+                                          Icons.circle,
+                                          color: Colors.green,
+                                          size: 10.0,
+                                        ),
+                                        Padding(
+                                          padding:
+                                              EdgeInsetsDirectional.fromSTEB(
+                                                  4.0, 0.0, 4.0, 0.0),
+                                          child: Text(
+                                            'Disponible',
+                                            style: FlutterFlowTheme.of(context)
+                                                .bodyMedium
+                                                .override(
+                                                  font: GoogleFonts.poppins(
+                                                    fontWeight: FontWeight.w600,
+                                                    fontStyle:
+                                                        FlutterFlowTheme.of(
+                                                                context)
+                                                            .bodyMedium
+                                                            .fontStyle,
+                                                  ),
+                                                  color: Colors.green,
+                                                  fontSize: 11.0,
+                                                  letterSpacing: 0.0,
+                                                  fontWeight: FontWeight.w600,
+                                                  fontStyle:
+                                                      FlutterFlowTheme.of(
+                                                              context)
+                                                          .bodyMedium
+                                                          .fontStyle,
+                                                ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Row(
+                            mainAxisSize: MainAxisSize.max,
+                            children: [
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(12.0),
+                                child: Image.network(
+                                  '300x450?movie+action+poster#1',
+                                  width: 90.0,
+                                  height: 130.0,
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                              Expanded(
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.max,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Dune: Part Two',
+                                      style: FlutterFlowTheme.of(context)
+                                          .titleLarge
+                                          .override(
+                                            font: GoogleFonts.poppins(
+                                              fontWeight: FontWeight.bold,
+                                              fontStyle:
+                                                  FlutterFlowTheme.of(context)
+                                                      .titleLarge
+                                                      .fontStyle,
+                                            ),
+                                            color: Colors.white,
+                                            fontSize: 18.0,
+                                            letterSpacing: 0.0,
+                                            fontWeight: FontWeight.bold,
+                                            fontStyle:
+                                                FlutterFlowTheme.of(context)
+                                                    .titleLarge
+                                                    .fontStyle,
+                                          ),
+                                    ),
+                                    Padding(
+                                      padding: EdgeInsetsDirectional.fromSTEB(
+                                          0.0, 4.0, 0.0, 10.0),
+                                      child: Text(
+                                        'Science-Fiction • Aventure',
+                                        style: FlutterFlowTheme.of(context)
+                                            .bodyMedium
+                                            .override(
+                                              font: GoogleFonts.poppins(
+                                                fontWeight: FontWeight.normal,
+                                                fontStyle:
+                                                    FlutterFlowTheme.of(context)
+                                                        .bodyMedium
+                                                        .fontStyle,
+                                              ),
+                                              color: Color(0xFFAAAAAA),
+                                              fontSize: 12.0,
+                                              letterSpacing: 0.0,
+                                              fontWeight: FontWeight.normal,
+                                              fontStyle:
+                                                  FlutterFlowTheme.of(context)
+                                                      .bodyMedium
+                                                      .fontStyle,
+                                            ),
+                                      ),
+                                    ),
+                                    Row(
+                                      mainAxisSize: MainAxisSize.max,
+                                      children: [
+                                        Container(
+                                          decoration: BoxDecoration(
+                                            color: Color(0xFF1C1C1C),
+                                            borderRadius:
+                                                BorderRadius.circular(6.0),
+                                          ),
+                                          child: Padding(
+                                            padding:
+                                                EdgeInsetsDirectional.fromSTEB(
+                                                    8.0, 4.0, 8.0, 4.0),
+                                            child: Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Text(
+                                                  'VF',
+                                                  style: FlutterFlowTheme.of(
+                                                          context)
+                                                      .bodyMedium
+                                                      .override(
+                                                        font:
+                                                            GoogleFonts.poppins(
+                                                          fontWeight:
+                                                              FontWeight.w600,
+                                                          fontStyle:
+                                                              FlutterFlowTheme.of(
+                                                                      context)
+                                                                  .bodyMedium
+                                                                  .fontStyle,
+                                                        ),
+                                                        color:
+                                                            Color(0xFFDDDDDD),
+                                                        fontSize: 11.0,
+                                                        letterSpacing: 0.0,
+                                                        fontWeight:
+                                                            FontWeight.w600,
+                                                        fontStyle:
+                                                            FlutterFlowTheme.of(
+                                                                    context)
+                                                                .bodyMedium
+                                                                .fontStyle,
+                                                      ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                        Container(
+                                          decoration: BoxDecoration(
+                                            color: Color(0xFF1C1C1C),
+                                            borderRadius:
+                                                BorderRadius.circular(6.0),
+                                          ),
+                                          child: Padding(
+                                            padding:
+                                                EdgeInsetsDirectional.fromSTEB(
+                                                    8.0, 4.0, 8.0, 4.0),
+                                            child: Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Text(
+                                                  'IMAX',
+                                                  style: FlutterFlowTheme.of(
+                                                          context)
+                                                      .bodyMedium
+                                                      .override(
+                                                        font:
+                                                            GoogleFonts.poppins(
+                                                          fontWeight:
+                                                              FontWeight.w600,
+                                                          fontStyle:
+                                                              FlutterFlowTheme.of(
+                                                                      context)
+                                                                  .bodyMedium
+                                                                  .fontStyle,
+                                                        ),
+                                                        color:
+                                                            Color(0xFFDDDDDD),
+                                                        fontSize: 11.0,
+                                                        letterSpacing: 0.0,
+                                                        fontWeight:
+                                                            FontWeight.w600,
+                                                        fontStyle:
+                                                            FlutterFlowTheme.of(
+                                                                    context)
+                                                                .bodyMedium
+                                                                .fontStyle,
+                                                      ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                        Container(
+                                          decoration: BoxDecoration(
+                                            color: Color(0xFF1C1C1C),
+                                            borderRadius:
+                                                BorderRadius.circular(6.0),
+                                          ),
+                                          child: Padding(
+                                            padding:
+                                                EdgeInsetsDirectional.fromSTEB(
+                                                    8.0, 4.0, 8.0, 4.0),
+                                            child: Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Text(
+                                                  '4K',
+                                                  style: FlutterFlowTheme.of(
+                                                          context)
+                                                      .bodyMedium
+                                                      .override(
+                                                        font:
+                                                            GoogleFonts.poppins(
+                                                          fontWeight:
+                                                              FontWeight.w600,
+                                                          fontStyle:
+                                                              FlutterFlowTheme.of(
+                                                                      context)
+                                                                  .bodyMedium
+                                                                  .fontStyle,
+                                                        ),
+                                                        color:
+                                                            Color(0xFFDDDDDD),
+                                                        fontSize: 11.0,
+                                                        letterSpacing: 0.0,
+                                                        fontWeight:
+                                                            FontWeight.w600,
+                                                        fontStyle:
+                                                            FlutterFlowTheme.of(
+                                                                    context)
+                                                                .bodyMedium
+                                                                .fontStyle,
+                                                      ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      ].divide(SizedBox(width: 6.0)),
+                                    ),
+                                    Padding(
+                                      padding: EdgeInsetsDirectional.fromSTEB(
+                                          0.0, 10.0, 0.0, 0.0),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.max,
+                                        children: [
+                                          Icon(
+                                            Icons.star_rounded,
+                                            color: Color(0xFFFFCC00),
+                                            size: 14.0,
+                                          ),
+                                          Text(
+                                            '8.7',
+                                            style: FlutterFlowTheme.of(context)
+                                                .bodyMedium
+                                                .override(
+                                                  font: GoogleFonts.poppins(
+                                                    fontWeight: FontWeight.bold,
+                                                    fontStyle:
+                                                        FlutterFlowTheme.of(
+                                                                context)
+                                                            .bodyMedium
+                                                            .fontStyle,
+                                                  ),
+                                                  color: Color(0xFFFFCC00),
+                                                  fontSize: 13.0,
+                                                  letterSpacing: 0.0,
+                                                  fontWeight: FontWeight.bold,
+                                                  fontStyle:
+                                                      FlutterFlowTheme.of(
+                                                              context)
+                                                          .bodyMedium
+                                                          .fontStyle,
+                                                ),
+                                          ),
+                                          Text(
+                                            '• Denis Villeneuve',
+                                            style: FlutterFlowTheme.of(context)
+                                                .bodyMedium
+                                                .override(
+                                                  font: GoogleFonts.poppins(
+                                                    fontWeight:
+                                                        FontWeight.normal,
+                                                    fontStyle:
+                                                        FlutterFlowTheme.of(
+                                                                context)
+                                                            .bodyMedium
+                                                            .fontStyle,
+                                                  ),
+                                                  color: Color(0xFFAAAAAA),
+                                                  fontSize: 12.0,
+                                                  letterSpacing: 0.0,
+                                                  fontWeight: FontWeight.normal,
+                                                  fontStyle:
+                                                      FlutterFlowTheme.of(
+                                                              context)
+                                                          .bodyMedium
+                                                          .fontStyle,
+                                                ),
+                                          ),
+                                        ].divide(SizedBox(width: 4.0)),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ].divide(SizedBox(width: 14.0)),
+                          ),
+                          Divider(
+                            height: 1.0,
+                            thickness: 1.0,
+                            color: Color(0xFF2A2A2A),
+                          ),
+                          Padding(
+                            padding: EdgeInsetsDirectional.fromSTEB(
+                                0.0, 12.0, 0.0, 0.0),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.max,
+                              children: [
+                                Padding(
+                                  padding: EdgeInsetsDirectional.fromSTEB(
+                                      0.0, 0.0, 0.0, 10.0),
+                                  child: Text(
+                                    'Horaires de projection',
+                                    style: FlutterFlowTheme.of(context)
+                                        .bodyMedium
+                                        .override(
+                                          font: GoogleFonts.poppins(
+                                            fontWeight: FontWeight.w500,
+                                            fontStyle:
+                                                FlutterFlowTheme.of(context)
+                                                    .bodyMedium
+                                                    .fontStyle,
+                                          ),
+                                          color: Color(0xFFAAAAAA),
+                                          fontSize: 13.0,
+                                          letterSpacing: 0.0,
+                                          fontWeight: FontWeight.w500,
+                                          fontStyle:
+                                              FlutterFlowTheme.of(context)
+                                                  .bodyMedium
+                                                  .fontStyle,
+                                        ),
+                                  ),
+                                ),
+                                Row(
+                                  mainAxisSize: MainAxisSize.max,
+                                  children: [
+                                    Container(
+                                      decoration: BoxDecoration(
+                                        color: Color(0xFFE50914),
+                                        borderRadius:
+                                            BorderRadius.circular(10.0),
+                                      ),
+                                      child: Padding(
+                                        padding: EdgeInsetsDirectional.fromSTEB(
+                                            14.0, 10.0, 14.0, 10.0),
+                                        child: Column(
+                                          mainAxisSize: MainAxisSize.max,
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.center,
+                                          children: [
+                                            Text(
+                                              '14:00',
+                                              style: FlutterFlowTheme.of(
+                                                      context)
+                                                  .bodyMedium
+                                                  .override(
+                                                    font: GoogleFonts.poppins(
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      fontStyle:
+                                                          FlutterFlowTheme.of(
+                                                                  context)
+                                                              .bodyMedium
+                                                              .fontStyle,
+                                                    ),
+                                                    color: Colors.white,
+                                                    fontSize: 15.0,
+                                                    letterSpacing: 0.0,
+                                                    fontWeight: FontWeight.bold,
+                                                    fontStyle:
+                                                        FlutterFlowTheme.of(
+                                                                context)
+                                                            .bodyMedium
+                                                            .fontStyle,
+                                                  ),
+                                            ),
+                                            Padding(
+                                              padding: EdgeInsetsDirectional
+                                                  .fromSTEB(0.0, 2.0, 0.0, 0.0),
+                                              child: Text(
+                                                'Salle 3',
+                                                style: FlutterFlowTheme.of(
+                                                        context)
+                                                    .bodyMedium
+                                                    .override(
+                                                      font: GoogleFonts.poppins(
+                                                        fontWeight:
+                                                            FontWeight.normal,
+                                                        fontStyle:
+                                                            FlutterFlowTheme.of(
+                                                                    context)
+                                                                .bodyMedium
+                                                                .fontStyle,
+                                                      ),
+                                                      color: Color(0xFFDDDDDD),
+                                                      fontSize: 11.0,
+                                                      letterSpacing: 0.0,
+                                                      fontWeight:
+                                                          FontWeight.normal,
+                                                      fontStyle:
+                                                          FlutterFlowTheme.of(
+                                                                  context)
+                                                              .bodyMedium
+                                                              .fontStyle,
+                                                    ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                    Container(
+                                      decoration: BoxDecoration(
+                                        color: Color(0xFF1C1C1C),
+                                        borderRadius:
+                                            BorderRadius.circular(10.0),
+                                        border: Border.all(
+                                          color: Color(0xFF2A2A2A),
+                                          width: 1.0,
+                                        ),
+                                      ),
+                                      child: Padding(
+                                        padding: EdgeInsetsDirectional.fromSTEB(
+                                            14.0, 10.0, 14.0, 10.0),
+                                        child: Column(
+                                          mainAxisSize: MainAxisSize.max,
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.center,
+                                          children: [
+                                            Text(
+                                              '17:30',
+                                              style: FlutterFlowTheme.of(
+                                                      context)
+                                                  .bodyMedium
+                                                  .override(
+                                                    font: GoogleFonts.poppins(
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      fontStyle:
+                                                          FlutterFlowTheme.of(
+                                                                  context)
+                                                              .bodyMedium
+                                                              .fontStyle,
+                                                    ),
+                                                    color: Colors.white,
+                                                    fontSize: 15.0,
+                                                    letterSpacing: 0.0,
+                                                    fontWeight: FontWeight.bold,
+                                                    fontStyle:
+                                                        FlutterFlowTheme.of(
+                                                                context)
+                                                            .bodyMedium
+                                                            .fontStyle,
+                                                  ),
+                                            ),
+                                            Padding(
+                                              padding: EdgeInsetsDirectional
+                                                  .fromSTEB(0.0, 2.0, 0.0, 0.0),
+                                              child: Text(
+                                                'Salle 1',
+                                                style: FlutterFlowTheme.of(
+                                                        context)
+                                                    .bodyMedium
+                                                    .override(
+                                                      font: GoogleFonts.poppins(
+                                                        fontWeight:
+                                                            FontWeight.normal,
+                                                        fontStyle:
+                                                            FlutterFlowTheme.of(
+                                                                    context)
+                                                                .bodyMedium
+                                                                .fontStyle,
+                                                      ),
+                                                      color: Color(0xFFAAAAAA),
+                                                      fontSize: 11.0,
+                                                      letterSpacing: 0.0,
+                                                      fontWeight:
+                                                          FontWeight.normal,
+                                                      fontStyle:
+                                                          FlutterFlowTheme.of(
+                                                                  context)
+                                                              .bodyMedium
+                                                              .fontStyle,
+                                                    ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                    Container(
+                                      decoration: BoxDecoration(
+                                        color: Color(0xFF1C1C1C),
+                                        borderRadius:
+                                            BorderRadius.circular(10.0),
+                                        border: Border.all(
+                                          color: Color(0xFF2A2A2A),
+                                          width: 1.0,
+                                        ),
+                                      ),
+                                      child: Padding(
+                                        padding: EdgeInsetsDirectional.fromSTEB(
+                                            14.0, 10.0, 14.0, 10.0),
+                                        child: Column(
+                                          mainAxisSize: MainAxisSize.max,
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.center,
+                                          children: [
+                                            Text(
+                                              '20:45',
+                                              style: FlutterFlowTheme.of(
+                                                      context)
+                                                  .bodyMedium
+                                                  .override(
+                                                    font: GoogleFonts.poppins(
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      fontStyle:
+                                                          FlutterFlowTheme.of(
+                                                                  context)
+                                                              .bodyMedium
+                                                              .fontStyle,
+                                                    ),
+                                                    color: Colors.white,
+                                                    fontSize: 15.0,
+                                                    letterSpacing: 0.0,
+                                                    fontWeight: FontWeight.bold,
+                                                    fontStyle:
+                                                        FlutterFlowTheme.of(
+                                                                context)
+                                                            .bodyMedium
+                                                            .fontStyle,
+                                                  ),
+                                            ),
+                                            Padding(
+                                              padding: EdgeInsetsDirectional
+                                                  .fromSTEB(0.0, 2.0, 0.0, 0.0),
+                                              child: Text(
+                                                'Salle 5',
+                                                style: FlutterFlowTheme.of(
+                                                        context)
+                                                    .bodyMedium
+                                                    .override(
+                                                      font: GoogleFonts.poppins(
+                                                        fontWeight:
+                                                            FontWeight.normal,
+                                                        fontStyle:
+                                                            FlutterFlowTheme.of(
+                                                                    context)
+                                                                .bodyMedium
+                                                                .fontStyle,
+                                                      ),
+                                                      color: Color(0xFFAAAAAA),
+                                                      fontSize: 11.0,
+                                                      letterSpacing: 0.0,
+                                                      fontWeight:
+                                                          FontWeight.normal,
+                                                      fontStyle:
+                                                          FlutterFlowTheme.of(
+                                                                  context)
+                                                              .bodyMedium
+                                                              .fontStyle,
+                                                    ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                    Container(
+                                      decoration: BoxDecoration(
+                                        color: Color(0xFF1C1C1C),
+                                        borderRadius:
+                                            BorderRadius.circular(10.0),
+                                        border: Border.all(
+                                          color: Color(0xFF2A2A2A),
+                                          width: 1.0,
+                                        ),
+                                      ),
+                                      child: Padding(
+                                        padding: EdgeInsetsDirectional.fromSTEB(
+                                            14.0, 10.0, 14.0, 10.0),
+                                        child: Column(
+                                          mainAxisSize: MainAxisSize.max,
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.center,
+                                          children: [
+                                            Text(
+                                              '23:15',
+                                              style: FlutterFlowTheme.of(
+                                                      context)
+                                                  .bodyMedium
+                                                  .override(
+                                                    font: GoogleFonts.poppins(
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      fontStyle:
+                                                          FlutterFlowTheme.of(
+                                                                  context)
+                                                              .bodyMedium
+                                                              .fontStyle,
+                                                    ),
+                                                    color: Colors.white,
+                                                    fontSize: 15.0,
+                                                    letterSpacing: 0.0,
+                                                    fontWeight: FontWeight.bold,
+                                                    fontStyle:
+                                                        FlutterFlowTheme.of(
+                                                                context)
+                                                            .bodyMedium
+                                                            .fontStyle,
+                                                  ),
+                                            ),
+                                            Padding(
+                                              padding: EdgeInsetsDirectional
+                                                  .fromSTEB(0.0, 2.0, 0.0, 0.0),
+                                              child: Text(
+                                                'Salle 2',
+                                                style: FlutterFlowTheme.of(
+                                                        context)
+                                                    .bodyMedium
+                                                    .override(
+                                                      font: GoogleFonts.poppins(
+                                                        fontWeight:
+                                                            FontWeight.normal,
+                                                        fontStyle:
+                                                            FlutterFlowTheme.of(
+                                                                    context)
+                                                                .bodyMedium
+                                                                .fontStyle,
+                                                      ),
+                                                      color: Color(0xFFAAAAAA),
+                                                      fontSize: 11.0,
+                                                      letterSpacing: 0.0,
+                                                      fontWeight:
+                                                          FontWeight.normal,
+                                                      fontStyle:
+                                                          FlutterFlowTheme.of(
+                                                                  context)
+                                                              .bodyMedium
+                                                              .fontStyle,
+                                                    ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ].divide(SizedBox(width: 8.0)),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Padding(
+                            padding: EdgeInsetsDirectional.fromSTEB(
+                                0.0, 12.0, 0.0, 0.0),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.max,
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Row(
+                                  mainAxisSize: MainAxisSize.max,
+                                  children: [
+                                    FFButtonWidget(
+                                      onPressed: () {
+                                        print('Button pressed ...');
+                                      },
+                                      text: 'modifier',
+                                      options: FFButtonOptions(
+                                        height: 34.0,
+                                        padding: EdgeInsetsDirectional.fromSTEB(
+                                            16.0, 0.0, 16.0, 0.0),
+                                        iconPadding:
+                                            EdgeInsetsDirectional.fromSTEB(
+                                                0.0, 0.0, 0.0, 0.0),
+                                        color: Color(0xFF0A7407),
+                                        textStyle: FlutterFlowTheme.of(context)
+                                            .titleSmall
+                                            .override(
+                                              font: GoogleFonts.poppins(
+                                                fontWeight: FontWeight.w600,
+                                                fontStyle:
+                                                    FlutterFlowTheme.of(context)
+                                                        .titleSmall
+                                                        .fontStyle,
+                                              ),
+                                              color: Colors.white,
+                                              fontSize: 13.0,
+                                              letterSpacing: 0.0,
+                                              fontWeight: FontWeight.w600,
+                                              fontStyle:
+                                                  FlutterFlowTheme.of(context)
+                                                      .titleSmall
+                                                      .fontStyle,
+                                            ),
+                                        elevation: 0.0,
+                                        borderSide: BorderSide(
+                                          color: Colors.transparent,
+                                          width: 1.0,
+                                        ),
+                                        borderRadius:
+                                            BorderRadius.circular(8.0),
+                                      ),
+                                    ),
+                                  ].divide(SizedBox(width: 6.0)),
+                                ),
+                                FFButtonWidget(
+                                  onPressed: () {
+                                    print('Button pressed ...');
+                                  },
+                                  text: 'Réserver',
+                                  options: FFButtonOptions(
+                                    height: 34.0,
+                                    padding: EdgeInsetsDirectional.fromSTEB(
+                                        16.0, 0.0, 16.0, 0.0),
+                                    iconPadding: EdgeInsetsDirectional.fromSTEB(
+                                        0.0, 0.0, 0.0, 0.0),
+                                    color: Color(0xFFE50914),
+                                    textStyle: FlutterFlowTheme.of(context)
+                                        .titleSmall
+                                        .override(
+                                          font: GoogleFonts.poppins(
+                                            fontWeight: FontWeight.w600,
+                                            fontStyle:
+                                                FlutterFlowTheme.of(context)
+                                                    .titleSmall
+                                                    .fontStyle,
+                                          ),
+                                          color: Colors.white,
+                                          fontSize: 13.0,
+                                          letterSpacing: 0.0,
+                                          fontWeight: FontWeight.w600,
+                                          fontStyle:
+                                              FlutterFlowTheme.of(context)
+                                                  .titleSmall
+                                                  .fontStyle,
+                                        ),
+                                    elevation: 0.0,
+                                    borderSide: BorderSide(
+                                      color: Colors.transparent,
+                                      width: 1.0,
+                                    ),
+                                    borderRadius: BorderRadius.circular(8.0),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+>>>>>>> billets
+                    ),
+                  ),
+                ),
+              ],
+            ),
+<<<<<<< HEAD
+          ),
+          
+          Expanded(
+            child: StreamBuilder<QuerySnapshot>(
+              stream: FirebaseFirestore.instance
+                  .collection('seances')
+                  .orderBy('dateTime')
+                  .snapshots(),
+              builder: (context, snapshot) {
+                if (!snapshot.hasData) {
+                  return const Center(child: CircularProgressIndicator(color: Color(0xFFE50914)));
+                }
+                
+                var allSeances = snapshot.data!.docs;
+                
+                var filteredSeances = allSeances.where((doc) {
+                  var data = doc.data() as Map<String, dynamic>;
+                  String? filmName = data['filmName'] as String?;
+                  DateTime? dateTime = (data['dateTime'] as Timestamp?)?.toDate();
+                  
+                  bool matchesSearch = _searchQuery.isEmpty ||
+                      (filmName?.toLowerCase().contains(_searchQuery) ?? false);
+                  bool matchesDate = _matchesDateFilter(dateTime);
+                  return matchesSearch && matchesDate;
+                }).toList();
+                
+                if (filteredSeances.isEmpty) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.movie_filter, size: 56, color: Color(0xFFAAAAAA)),
+                        const SizedBox(height: 16),
+                        Text(
+                          _getEmptyMessage(),
+                          style: const TextStyle(color: Color(0xFFAAAAAA), fontSize: 15),
+                          textAlign: TextAlign.center,
+                        ),
+                        if (_searchQuery.isNotEmpty || _dateFilter != 'tous')
+                          TextButton(
+                            onPressed: () {
+                              setState(() {
+                                _searchQuery = '';
+                                _searchController.clear();
+                                _dateFilter = 'tous';
+                                _selectedDate = null;
+                              });
+                            },
+                            child: const Text('Effacer les filtres', style: TextStyle(color: Color(0xFFE50914), fontSize: 13)),
+                          ),
+                      ],
+                    ),
+                  );
+                }
+                
+                return ListView.builder(
+                  padding: const EdgeInsets.all(12),
+                  itemCount: filteredSeances.length,
+                  itemBuilder: (context, index) {
+                    var doc = filteredSeances[index];
+                    var data = doc.data() as Map<String, dynamic>;
+                    return _buildSeanceCard(doc.id, data);
+                  },
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  Widget _buildSeanceCard(String docId, Map<String, dynamic> data) {
+    String salleName = data['salleName'] as String? ?? 'Salle non assignée';
+    DateTime? dateTime = (data['dateTime'] as Timestamp?)?.toDate();
+    String filmName = data['filmName'] as String? ?? 'Film sans titre';
+    String? filmId = data['filmId'] as String?;
+    String format = data['format'] as String? ?? 'VO';
+    String quality = data['quality'] as String? ?? '2D';
+    
+    return FutureBuilder<DocumentSnapshot>(
+      future: filmId != null && filmId.isNotEmpty
+          ? FirebaseFirestore.instance.collection('films').doc(filmId).get()
+          : null,
+      builder: (context, filmSnapshot) {
+        String filmTitle = filmName;
+        String filmDescription = '';
+        String filmImage = '';
+        String filmRealisateur = '';
+        
+        if (filmSnapshot.hasData && filmSnapshot.data!.exists) {
+          final filmData = filmSnapshot.data!.data() as Map<String, dynamic>?;
+          if (filmData != null) {
+            filmTitle = filmData['title'] ?? filmData['titre'] ?? filmName;
+            filmDescription = filmData['desription'] ?? filmData['description'] ?? '';
+            filmImage = filmData['image'] ?? filmData['poster_path'] ?? filmData['imageUrl'] ?? '';
+            filmRealisateur = filmData['realisateur'] ?? '';
+          }
+        }
+        
+        final seanceData = SeanceData(
+          id: docId,
+          filmTitle: filmTitle,
+          salleName: salleName,
+          dateTime: dateTime,
+          format: format,
+          quality: quality,
+          description: filmDescription,
+          image: filmImage,
+          realisateur: filmRealisateur,
+        );
+        
+        return GestureDetector(
+          onTap: () => _showSeanceModal(seanceData),
+          child: Container(
+            margin: const EdgeInsets.only(bottom: 12),
+            decoration: BoxDecoration(
+              color: const Color(0xFF161616),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: const Color(0xFF2A2A2A)),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(14),
+              child: Row(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(10),
+                    child: filmImage.isNotEmpty
+                        ? Image.network(
+                            filmImage,
+                            width: 60,
+                            height: 80,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) => Container(
+                              width: 60,
+                              height: 80,
+                              color: const Color(0xFF2A2A2A),
+                              child: const Icon(Icons.movie, color: Color(0xFFAAAAAA), size: 28),
+                            ),
+                          )
+                        : Container(
+                            width: 60,
+                            height: 80,
+                            color: const Color(0xFF2A2A2A),
+                            child: const Icon(Icons.movie, color: Color(0xFFAAAAAA), size: 28),
+                          ),
+                  ),
+                  const SizedBox(width: 14),
+                  
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          filmTitle,
+                          style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 8),
+                        
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF1C1C1C),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.calendar_today, size: 12, color: Color(0xFFE50914)),
+                              const SizedBox(width: 6),
+                              Text(
+                                _formatDayMonth(dateTime),
+                                style: const TextStyle(color: Colors.white70, fontSize: 12),
+                              ),
+                              const SizedBox(width: 10),
+                              const Icon(Icons.access_time, size: 12, color: Color(0xFFE50914)),
+                              const SizedBox(width: 6),
+                              Text(
+                                _formatHourMinute(dateTime),
+                                style: const TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.w500),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        
+                        Row(
+                          children: [
+                            const Icon(Icons.location_on, size: 12, color: Color(0xFFAAAAAA)),
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: Text(
+                                salleName,
+                                style: const TextStyle(color: Color(0xFFAAAAAA), fontSize: 12),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+                        
+                        Wrap(
+                          spacing: 6,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFE50914).withValues(alpha: 0.2),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Text(
+                                format.toUpperCase(),
+                                style: const TextStyle(color: Color(0xFFE50914), fontSize: 11, fontWeight: FontWeight.w600),
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF1C1C1C),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Text(
+                                quality,
+                                style: const TextStyle(color: Color(0xFFAAAAAA), fontSize: 11),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  
+                  if (_isOwner)
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          onPressed: () => _editSeance(docId),
+                          icon: const Icon(Icons.edit, color: Color(0xFF0A7407), size: 20),
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                        ),
+                        const SizedBox(width: 6),
+                        IconButton(
+                          onPressed: () => _deleteSeance(docId),
+                          icon: const Icon(Icons.delete, color: Color(0xFFE50914), size: 20),
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                        ),
+                      ],
+                    ),
+                  
+                  const Icon(Icons.chevron_right, color: Color(0xFFAAAAAA), size: 24),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+  
+  Widget _buildDateFilterChip(String label, String filterType, {DateTime? specificDate}) {
+    bool isSelected = false;
+    if (filterType == 'tous') {
+      isSelected = _dateFilter == 'tous';
+    } else if (filterType == 'aujourdhui') {
+      isSelected = _dateFilter == 'aujourdhui';
+    } else if (filterType == 'demain') {
+      isSelected = _dateFilter == 'demain';
+    } else if (filterType == 'calendar') {
+      isSelected = false;
+    } else {
+      isSelected = _selectedDate == specificDate;
+    }
+    
+    return GestureDetector(
+      onTap: () async {
+        if (filterType == 'calendar') {
+          final picked = await showDatePicker(
+            context: context,
+            initialDate: DateTime.now(),
+            firstDate: DateTime.now(),
+            lastDate: DateTime.now().add(const Duration(days: 365)),
+          );
+          if (picked != null) {
+            setState(() {
+              _dateFilter = 'specific';
+              _selectedDate = picked;
+            });
+          }
+        } else {
+          setState(() {
+            _dateFilter = filterType;
+            if (filterType == 'specific' && specificDate != null) {
+              _selectedDate = specificDate;
+            } else {
+              _selectedDate = null;
+            }
+          });
+        }
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+        decoration: BoxDecoration(
+          color: isSelected ? const Color(0xFFE50914) : const Color(0xFF1C1C1C),
+          borderRadius: BorderRadius.circular(20),
+          border: isSelected ? null : Border.all(color: const Color(0xFF333333)),
+        ),
+        child: Text(
+          label,
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            color: isSelected ? Colors.white : const Color(0xFFAAAAAA),
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+            fontSize: 12,
+          ),
+=======
+          ],
+>>>>>>> billets
+        ),
+      ),
+    );
+  }
+<<<<<<< HEAD
+  
+  String _getDayName(DateTime date) {
+    const days = ['LUN', 'MAR', 'MER', 'JEU', 'VEN', 'SAM', 'DIM'];
+    return days[date.weekday - 1];
+  }
+  
+  String _getEmptyMessage() {
+    if (_searchQuery.isNotEmpty && _dateFilter != 'tous') {
+      return 'Aucun film trouvé\npour cette recherche et date';
+    } else if (_searchQuery.isNotEmpty) {
+      return 'Aucun film trouvé pour\n"$_searchQuery"';
+    } else if (_dateFilter != 'tous') {
+      String dateText = '';
+      if (_dateFilter == 'aujourdhui') dateText = "aujourd'hui";
+      else if (_dateFilter == 'demain') dateText = 'demain';
+      else if (_selectedDate != null) dateText = 'le ${_selectedDate!.day}/${_selectedDate!.month}';
+      return 'Aucune séance $dateText';
+    }
+    return 'Aucune séance disponible';
+  }
+}
+
+class SeanceData {
+  final String id;
+  final String filmTitle;
+  final String salleName;
+  final DateTime? dateTime;
+  final String format;
+  final String quality;
+  final String description;
+  final String image;
+  final String realisateur;
+
+  SeanceData({
+    required this.id,
+    required this.filmTitle,
+    required this.salleName,
+    required this.dateTime,
+    required this.format,
+    required this.quality,
+    required this.description,
+    required this.image,
+    required this.realisateur,
+  });
+}
+=======
+}
+>>>>>>> billets

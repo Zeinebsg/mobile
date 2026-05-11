@@ -1,0 +1,43 @@
+{
+  "project_info": {
+<<<<<<< HEAD
+    "project_number": "584176998095",
+    "project_id": "fricasse-sb3fj7",
+    "storage_bucket": "fricasse-sb3fj7.firebasestorage.app"
+=======
+    "project_number": "729591782379",
+    "project_id": "fricasse-arp8ru",
+    "storage_bucket": "fricasse-arp8ru.firebasestorage.app"
+>>>>>>> billets
+  },
+  "client": [
+    {
+      "client_info": {
+<<<<<<< HEAD
+        "mobilesdk_app_id": "1:584176998095:android:203d8012b6b09fa6cb49ba",
+=======
+        "mobilesdk_app_id": "1:729591782379:android:2474ed29e36b515ae597ae",
+>>>>>>> billets
+        "android_client_info": {
+          "package_name": "com.moviea"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+<<<<<<< HEAD
+          "current_key": "AIzaSyA5-hI5H1ysRPHScaYmb5GgTP9ZQkPtMsc"
+=======
+          "current_key": "AIzaSyDcuRLQRFalbTG05XU68sfb6YiYxXiskWU"
+>>>>>>> billets
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
